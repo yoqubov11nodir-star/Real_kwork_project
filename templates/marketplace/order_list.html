@@ -1,0 +1,220 @@
+{% extends "base/base.html" %}
+{% block title %}Buyurtmalar — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .page-header {
+    padding: 3rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(99,102,241,0.05) 0%, transparent 100%);
+  }
+  .filter-bar {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.25rem 1.5rem;
+    display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .search-input-wrap {
+    flex: 1; min-width: 220px; position: relative;
+  }
+  .search-input-wrap i {
+    position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+    color: var(--text-dim);
+  }
+  .search-input-wrap input {
+    padding-left: 2.75rem !important;
+  }
+  .filter-select { width: 180px; }
+
+  .order-row {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.5rem;
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 1rem; text-decoration: none; color: var(--text);
+    transition: var(--transition); margin-bottom: 1rem;
+    position: relative; overflow: hidden;
+  }
+  .order-row::after {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--accent), var(--accent3));
+    transform: scaleY(0); transform-origin: top; transition: transform 0.25s ease;
+  }
+  .order-row:hover { border-color: rgba(99,102,241,0.35); }
+  .order-row:hover::after { transform: scaleY(1); }
+  .order-row-left { flex: 1; }
+  .order-row-right {
+    display: flex; flex-direction: column; align-items: flex-end;
+    gap: 0.75rem; min-width: 160px;
+  }
+  .order-client {
+    display: flex; align-items: center; gap: 0.5rem;
+    color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.35rem;
+  }
+  .order-client-av {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700; color: #fff;
+  }
+  .skills-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.75rem; }
+  .skill-tag {
+    background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2);
+    color: var(--accent); padding: 0.15rem 0.6rem; border-radius: 6px; font-size: 0.75rem;
+  }
+  .match-ring {
+    width: 52px; height: 52px;
+    border-radius: 50%; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 0.75rem; font-weight: 700;
+  }
+  .empty-state {
+    text-align: center; padding: 5rem 2rem;
+    color: var(--text-muted);
+  }
+  .empty-icon {
+    font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.2;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <h1 class="section-title">Buyurtmalar</h1>
+        <p style="color:var(--text-muted);">Ochiq loyihalar va frilanser talab qilinayotgan ishlar</p>
+      </div>
+      {% if user.is_authenticated and user.profile.role == 'client' %}
+      <a href="{% url 'marketplace:order_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Yangi buyurtma
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container page-content">
+  <!-- FILTERS -->
+  <form method="get" class="filter-bar">
+    <div class="search-input-wrap">
+      <i class="fas fa-search"></i>
+      <input class="form-control" type="text" name="q" value="{{ q }}" placeholder="Kalit so'z...">
+    </div>
+    <select class="form-select filter-select" name="category">
+      <option value="">Barcha kategoriya</option>
+      {% for value, label in categories %}
+      <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <input class="form-control" style="width:120px;" type="number" name="min_budget" placeholder="Min $" value="{{ request.GET.min_budget }}">
+    <input class="form-control" style="width:120px;" type="number" name="max_budget" placeholder="Max $" value="{{ request.GET.max_budget }}">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Qidirish</button>
+    {% if q or category or request.GET.min_budget %}
+    <a href="{% url 'marketplace:order_list' %}" class="btn btn-ghost"><i class="fas fa-times"></i></a>
+    {% endif %}
+  </form>
+
+  <!-- ORDER LIST (Frilanser uchun — match score bilan) -->
+  {% if orders_with_scores %}
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
+      <i class="fas fa-brain" style="color:var(--accent);"></i>
+      <span style="color:var(--text-muted);font-size:0.875rem;">AI moslik foizi sizning ko'nikmalaringiz asosida hisoblanmoqda</span>
+    </div>
+    {% for item in orders_with_scores %}
+    {% with order=item.order score=item.match_score %}
+    <a href="{% url 'marketplace:order_detail' order.pk %}" class="order-row">
+      <div class="order-row-left">
+        <div class="order-client">
+          <div class="order-client-av">{{ order.client.first_name|first|upper }}</div>
+          {{ order.client.get_full_name|default:order.client.username }}
+          &nbsp;·&nbsp; {{ order.created_at|timesince }} oldin
+        </div>
+        <div class="order-title" style="font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:0.4rem;">
+          {{ order.title }}
+        </div>
+        <div style="color:var(--text-muted);font-size:0.875rem;line-height:1.5;">
+          {{ order.description|truncatechars:120 }}
+        </div>
+        {% if order.get_required_skills_list %}
+        <div class="skills-tags">
+          {% for skill in order.get_required_skills_list|slice:":5" %}
+          <span class="skill-tag">{{ skill }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="order-row-right">
+        <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;
+            color:{% if score >= 70 %}var(--green){% elif score >= 40 %}var(--orange){% else %}var(--text-muted){% endif %};">
+            {{ score }}%
+          </div>
+          <div style="font-size:0.7rem;color:var(--text-dim);">moslik</div>
+        </div>
+        <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--green);">
+          ${{ order.initial_budget }}
+        </div>
+        {% if order.deadline_days %}
+        <span style="color:var(--text-muted);font-size:0.8rem;">
+          <i class="fas fa-clock"></i> {{ order.deadline_days }} kun
+        </span>
+        {% endif %}
+      </div>
+    </a>
+    {% endwith %}
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-briefcase"></i></div>
+      <h3>Buyurtma topilmadi</h3>
+      <p>Qidiruv shartlarini o'zgartiring</p>
+    </div>
+    {% endfor %}
+
+  <!-- ORDER LIST (Oddiy ko'rinish) -->
+  {% else %}
+    {% for order in orders %}
+    <a href="{% url 'marketplace:order_detail' order.pk %}" class="order-row">
+      <div class="order-row-left">
+        <div class="order-client">
+          <div class="order-client-av">{{ order.client.first_name|first|upper }}</div>
+          {{ order.client.get_full_name|default:order.client.username }}
+          &nbsp;·&nbsp; {{ order.created_at|timesince }} oldin
+          &nbsp;·&nbsp; <span class="tag">{{ order.get_category_display }}</span>
+        </div>
+        <div style="font-family:var(--font-display);font-size:1.05rem;font-weight:700;margin-bottom:0.4rem;">
+          {{ order.title }}
+        </div>
+        <div style="color:var(--text-muted);font-size:0.875rem;line-height:1.5;">
+          {{ order.description|truncatechars:120 }}
+        </div>
+        {% if order.get_required_skills_list %}
+        <div class="skills-tags">
+          {% for skill in order.get_required_skills_list|slice:":5" %}
+          <span class="skill-tag">{{ skill }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="order-row-right">
+        <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+        <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;color:var(--green);">
+          ${{ order.initial_budget }}
+        </div>
+        {% if order.deadline_days %}
+        <span style="color:var(--text-muted);font-size:0.8rem;">
+          <i class="fas fa-clock"></i> {{ order.deadline_days }} kun
+        </span>
+        {% endif %}
+      </div>
+    </a>
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-briefcase"></i></div>
+      <h3>Buyurtma topilmadi</h3>
+      <p>Qidiruv shartlarini o'zgartiring yoki filter tozalang</p>
+      <a href="{% url 'marketplace:order_list' %}" class="btn btn-ghost" style="margin-top:1rem;">Filterni tozalash</a>
+    </div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

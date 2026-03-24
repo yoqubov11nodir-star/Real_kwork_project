@@ -1,0 +1,327 @@
+{% extends "base/base.html" %}
+{% block title %}{{ vacancy.title }} — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .detail-hero { padding:2.5rem 0 0; border-bottom:1px solid var(--border); }
+  .detail-body { display:grid; grid-template-columns:1fr 340px; gap:2rem; padding:2rem 0 4rem; }
+  .sidebar-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.5rem;
+  }
+  .sidebar-card-title {
+    font-size:.75rem; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--text-muted); font-weight:700; margin-bottom:1rem;
+  }
+  .info-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:.6rem 0; border-bottom:1px solid var(--border); font-size:.875rem;
+  }
+  .info-row:last-child { border-bottom:none; }
+  .skill-pill {
+    display:inline-block; margin:.2rem;
+    background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.25);
+    color:var(--accent); padding:.25rem .75rem; border-radius:100px; font-size:.8rem;
+  }
+  .worker-card {
+    display:flex; align-items:center; gap:.85rem; padding:.85rem;
+    border-radius:12px; background:var(--bg3); border:1px solid var(--border);
+    margin-bottom:.6rem; text-decoration:none; color:var(--text); transition:var(--transition);
+  }
+  .worker-card:hover { border-color:var(--accent); }
+  .worker-av {
+    width:40px; height:40px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; font-size:.9rem; color:#fff; overflow:hidden;
+  }
+  .worker-av img { width:100%;height:100%;object-fit:cover; }
+  .match-score-bar {
+    background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(139,92,246,.15));
+    border:1px solid rgba(99,102,241,.4); border-radius:var(--radius-lg);
+    padding:1.5rem; display:flex; align-items:center; gap:1.25rem; margin-bottom:1.5rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-hero">
+  <div class="container">
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+      <a href="{% url 'marketplace:vacancy_list' %}"
+         style="color:var(--text-muted);text-decoration:none;font-size:.875rem;">
+        <i class="fas fa-arrow-left"></i> Vakansiyalar
+      </a>
+      <span style="color:var(--border);">/</span>
+      <span class="tag">{{ vacancy.get_category_display }}</span>
+      <span class="status-badge status-{{ vacancy.status }}">
+        {{ vacancy.get_status_display }}
+      </span>
+      {% if vacancy.is_team_project %}
+      <span style="background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.25);
+        color:var(--accent3);padding:.2rem .65rem;border-radius:100px;font-size:.75rem;">
+        <i class="fas fa-users"></i> Jamoa loyihasi
+      </span>
+      {% endif %}
+    </div>
+
+    <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:800;
+      letter-spacing:-.5px;margin-bottom:1rem;">
+      {{ vacancy.title }}
+    </h1>
+
+    <div style="display:flex;align-items:center;gap:1.5rem;padding-bottom:1.5rem;flex-wrap:wrap;">
+      <a href="{% url 'marketplace:profile' vacancy.company.username %}"
+         style="display:flex;align-items:center;gap:.6rem;color:var(--text-muted);text-decoration:none;">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--accent2);
+          display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;">
+          {{ vacancy.company.first_name|first|upper }}
+        </div>
+        {{ vacancy.company.get_full_name|default:vacancy.company.username }}
+        <span style="background:rgba(99,102,241,.12);color:var(--accent);
+          padding:.15rem .5rem;border-radius:100px;font-size:.72rem;">Kompaniya</span>
+      </a>
+      <span style="color:var(--text-dim);">·</span>
+      <span style="color:var(--text-muted);font-size:.875rem;">
+        {{ vacancy.created_at|timesince }} oldin
+      </span>
+      <span style="color:var(--text-dim);">·</span>
+      <span style="color:var(--text-muted);font-size:.875rem;">
+        <i class="fas fa-users"></i> {{ applications_count }} ariza
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="detail-body">
+    <!-- LEFT -->
+    <div>
+      {% if user_match_score is not None %}
+      <div class="match-score-bar">
+        <div>
+          <div style="font-family:var(--font-display);font-size:2.5rem;font-weight:800;line-height:1;
+            color:{% if user_match_score >= 70 %}var(--green){% elif user_match_score >= 40 %}var(--orange){% else %}var(--text-muted){% endif %};">
+            {{ user_match_score }}%
+          </div>
+          <div style="color:var(--text-muted);font-size:.85rem;margin-top:.25rem;">
+            Sizning moslik darajangiz
+          </div>
+        </div>
+        <div style="flex:1;">
+          <div class="match-bar" style="height:8px;">
+            <div class="match-bar-fill" style="width:{{ user_match_score }}%;
+              background:{% if user_match_score >= 70 %}var(--green){% elif user_match_score >= 40 %}var(--orange){% else %}var(--text-muted){% endif %};">
+            </div>
+          </div>
+          <div style="font-size:.78rem;color:var(--text-dim);margin-top:.4rem;">
+            Ko'nikmalaringiz asosida AI hisobladi
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- TAVSIF -->
+      <div style="background:var(--bg2);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:2rem;margin-bottom:1.5rem;">
+        <div style="font-family:var(--font-display);font-weight:700;
+          margin-bottom:1rem;font-size:1.05rem;">
+          Vakansiya tavsifi
+        </div>
+        <div style="color:var(--text-muted);line-height:1.8;white-space:pre-line;">
+          {{ vacancy.description }}
+        </div>
+      </div>
+
+      <!-- SKILLS -->
+      {% if vacancy.get_skills_list %}
+      <div style="background:var(--bg2);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:1.75rem;margin-bottom:1.5rem;">
+        <div style="font-family:var(--font-display);font-weight:700;
+          margin-bottom:1rem;font-size:1.05rem;">
+          Kerakli ko'nikmalar
+        </div>
+        {% for skill in vacancy.get_skills_list %}
+        <span class="skill-pill">{{ skill }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- KOMPANIYA AMALLAR -->
+      {% if user.is_authenticated and user == vacancy.company %}
+      <div style="background:var(--bg2);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:1.5rem;
+        display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+
+        <a href="{% url 'negotiation:vacancy_applications' vacancy.pk %}"
+           class="btn btn-primary">
+          <i class="fas fa-users"></i> Arizalar
+          {% if applications_count > 0 %}
+          <span style="background:rgba(255,255,255,.25);border-radius:100px;
+            padding:.1rem .5rem;font-size:.8rem;">{{ applications_count }}</span>
+          {% endif %}
+        </a>
+
+        {% if vacancy.status == 'OPEN' %}
+        <a href="{% url 'marketplace:vacancy_edit' vacancy.pk %}" class="btn btn-ghost">
+          <i class="fas fa-pen"></i> Tahrirlash
+        </a>
+        <a href="{% url 'marketplace:vacancy_close' vacancy.pk %}"
+           class="btn btn-ghost"
+           style="border-color:var(--orange);color:var(--orange);">
+          <i class="fas fa-lock"></i> Yopish
+        </a>
+        {% endif %}
+
+        {% if vacancy.status in 'OPEN CLOSED' %}
+        <a href="{% url 'marketplace:vacancy_delete' vacancy.pk %}"
+           class="btn btn-danger" style="margin-left:auto;">
+          <i class="fas fa-trash"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- WORKER AMALLAR -->
+      {% if user.is_authenticated and user.profile.role == 'freelancer' and user != vacancy.company %}
+      <div style="background:var(--bg2);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:1.75rem;">
+        {% if user_negotiation %}
+          {% if user_negotiation.status == 'active' %}
+          <a href="{% url 'negotiation:negotiation_room' user_negotiation.pk %}"
+             class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:.85rem;">
+            <i class="fas fa-comments"></i> Muzokarani davom ettirish
+          </a>
+          {% elif user_negotiation.status == 'accepted' %}
+          <div style="text-align:center;color:var(--green);font-weight:600;">
+            <i class="fas fa-check-circle"></i> Siz bu loyihaga qabul qilindingiz!
+          </div>
+          {% else %}
+          <div style="text-align:center;color:var(--text-muted);">
+            Arizangiz ko'rib chiqildi
+          </div>
+          {% endif %}
+        {% elif vacancy.status == 'OPEN' %}
+        <a href="{% url 'negotiation:start_negotiation' vacancy.pk %}"
+           class="btn btn-primary"
+           style="width:100%;justify-content:center;font-size:1rem;padding:.85rem;">
+          <i class="fas fa-handshake"></i> Ariza berish — Muzokarani boshlash
+        </a>
+        <div style="text-align:center;color:var(--text-muted);font-size:.8rem;margin-top:.75rem;">
+          Narx va muddatni kelishing, kompaniya qabul qilsa ish boshlanadi
+        </div>
+        {% else %}
+        <div style="text-align:center;color:var(--text-muted);">
+          Bu vakansiya yopilgan
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if not user.is_authenticated %}
+      <div style="background:var(--bg2);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:1.75rem;text-align:center;">
+        <p style="color:var(--text-muted);margin-bottom:1rem;">
+          Ariza berish uchun kirish kerak
+        </p>
+        <a href="{% url 'auth:login' %}?next={{ request.path }}" class="btn btn-primary">
+          <i class="fas fa-sign-in-alt"></i> Kirish
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <!-- VAKANSIYA INFO -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Vakansiya ma'lumotlari</div>
+        <div class="info-row">
+          <span style="color:var(--text-muted);">Byudjet</span>
+          <span style="font-family:var(--font-display);font-weight:700;color:var(--green);">
+            ${{ vacancy.budget_min }} – ${{ vacancy.budget_max }}
+          </span>
+        </div>
+        <div class="info-row">
+          <span style="color:var(--text-muted);">Muddat</span>
+          <span style="font-weight:600;">{{ vacancy.deadline_days }} kun</span>
+        </div>
+        <div class="info-row">
+          <span style="color:var(--text-muted);">Kerakli worker</span>
+          <span style="font-weight:600;color:var(--accent3);">
+            {{ vacancy.hired_count }}/{{ vacancy.required_workers }}
+          </span>
+        </div>
+        <div class="info-row">
+          <span style="color:var(--text-muted);">Kategoriya</span>
+          <span style="font-weight:600;">{{ vacancy.get_category_display }}</span>
+        </div>
+        <div class="info-row">
+          <span style="color:var(--text-muted);">Holat</span>
+          <span class="status-badge status-{{ vacancy.status }}">
+            {{ vacancy.get_status_display }}
+          </span>
+        </div>
+      </div>
+
+      <!-- TOP WORKERS (kompaniya uchun) -->
+      {% if top_workers %}
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">
+          <i class="fas fa-brain" style="color:var(--accent);"></i>
+          AI tavsiya — Top workerlar
+        </div>
+        {% for item in top_workers %}
+        <a href="{% url 'marketplace:profile' item.profile.user.username %}"
+           class="worker-card">
+          <div class="worker-av">
+            {% if item.profile.avatar %}
+            <img src="{{ item.profile.avatar.url }}">
+            {% else %}
+            {{ item.profile.user.first_name|first|upper }}
+            {% endif %}
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:.875rem;">
+              {{ item.profile.user.get_full_name|default:item.profile.user.username }}
+            </div>
+            <div style="font-size:.75rem;color:var(--text-muted);">
+              ★ {{ item.profile.rating }} · {{ item.profile.completed_jobs_count }} ish
+            </div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;
+              color:{% if item.score_percent >= 70 %}var(--green){% elif item.score_percent >= 40 %}var(--orange){% else %}var(--text-muted){% endif %};">
+              {{ item.score_percent }}%
+            </div>
+            <div style="font-size:.65rem;color:var(--text-dim);">moslik</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- KOMPANIYA -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Kompaniya</div>
+        <a href="{% url 'marketplace:profile' vacancy.company.username %}"
+           style="display:flex;align-items:center;gap:.85rem;text-decoration:none;color:var(--text);">
+          <div style="width:48px;height:48px;border-radius:50%;
+            background:linear-gradient(135deg,var(--accent2),var(--accent));
+            display:flex;align-items:center;justify-content:center;
+            font-family:var(--font-display);font-weight:700;color:#fff;font-size:1.1rem;">
+            {{ vacancy.company.first_name|first|upper }}
+          </div>
+          <div>
+            <div style="font-weight:700;">
+              {{ vacancy.company.get_full_name|default:vacancy.company.username }}
+            </div>
+            <div style="color:var(--text-muted);font-size:.8rem;">
+              {{ vacancy.company.vacancies.count }} ta vakansiya
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

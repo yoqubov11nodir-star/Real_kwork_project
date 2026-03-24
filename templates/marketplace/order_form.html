@@ -1,0 +1,110 @@
+{% extends "base/base.html" %}
+{% block title %}{% if order %}Tahrirlash{% else %}Buyurtma yaratish{% endif %} — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .form-page { max-width: 760px; margin: 0 auto; padding: 3rem 0 5rem; }
+  .form-header { margin-bottom: 2rem; }
+  .form-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; }
+  .form-section-title {
+    font-family: var(--font-display); font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+    margin: 1.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .tip-box {
+    background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 10px; padding: 1rem 1.25rem; margin-top: 2rem;
+    font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="form-page">
+    <div class="form-header">
+      <a href="{% url 'marketplace:order_list' %}" style="color:var(--text-muted);text-decoration:none;font-size:0.875rem;">
+        <i class="fas fa-arrow-left"></i> Orqaga
+      </a>
+      <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:800;margin-top:1rem;">
+        {% if order %}Buyurtmani tahrirlash{% else %}Yangi buyurtma yaratish{% endif %}
+      </h1>
+      <p style="color:var(--text-muted);margin-top:0.5rem;">
+        To'liq va aniq ma'lumot kiriting — AI moslik tizimi shundan foydalanadi
+      </p>
+    </div>
+
+    <div class="form-card">
+      <form method="post">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-error" style="margin-bottom:1.5rem;">
+          <i class="fas fa-exclamation-circle"></i>
+          Quyidagi xatolarni to'g'irlang:
+          {% for field, errors in form.errors.items %}
+            {% for err in errors %} <br>• {{ err }}{% endfor %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-section-title">Asosiy ma'lumotlar</div>
+
+        <div class="form-group">
+          <label class="form-label">Loyiha nomi *</label>
+          {{ form.title }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kategoriya *</label>
+          {{ form.category }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Batafsil tavsif *</label>
+          {{ form.description }}
+          <div style="color:var(--text-dim);font-size:0.78rem;margin-top:0.4rem;">
+            Ko'proq ma'lumot bersangiz, AI tizimi frilanserlarni aniqroq tanlaydi
+          </div>
+        </div>
+
+        <div class="form-section-title">Moliyaviy va vaqt</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Boshlang'ich byudjet ($) *</label>
+            {{ form.initial_budget }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Muddat (kun)</label>
+            {{ form.deadline_days }}
+          </div>
+        </div>
+
+        <div class="form-section-title">Texnik talablar</div>
+
+        <div class="form-group">
+          <label class="form-label">Kerakli ko'nikmalar</label>
+          {{ form.required_skills }}
+          <div style="color:var(--text-dim);font-size:0.78rem;margin-top:0.4rem;">
+            Vergul bilan ajratib yozing: Python, Django, React
+          </div>
+        </div>
+
+        <div style="margin-top:2rem;display:flex;gap:1rem;">
+          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;padding:0.85rem;">
+            <i class="fas fa-{% if order %}save{% else %}plus{% endif %}"></i>
+            {% if order %}Saqlash{% else %}Buyurtma yaratish{% endif %}
+          </button>
+          <a href="{% url 'marketplace:order_list' %}" class="btn btn-ghost">Bekor qilish</a>
+        </div>
+      </form>
+
+      <div class="tip-box">
+        <i class="fas fa-lightbulb" style="color:var(--gold);"></i>
+        <strong>Maslahat:</strong> "Kerakli ko'nikmalar" maydonini to'ldiring — AI tizimi frilanserni shu kalit so'zlar bo'yicha tahlil qiladi va eng mos mutaxassislarni sizga ko'rsatadi.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

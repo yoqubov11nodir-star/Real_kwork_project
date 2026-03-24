@@ -1,0 +1,399 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}FreelanceUZ{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #111118;
+      --bg3: #1a1a24;
+      --border: #2a2a38;
+      --border-glow: rgba(99,102,241,0.4);
+      --text: #e8e8f0;
+      --text-muted: #7878a0;
+      --text-dim: #4a4a6a;
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --accent3: #06b6d4;
+      --green: #10b981;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --gold: #f59e0b;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-accent: 0 0 30px rgba(99,102,241,0.15);
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 1000;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex; align-items: center;
+    }
+    .nav-inner {
+      width: 100%; max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; gap: 2rem;
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.4rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      text-decoration: none; letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 0.25rem;
+      flex: 1;
+    }
+    .nav-links a {
+      padding: 0.4rem 0.9rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9rem; font-weight: 500;
+      transition: var(--transition);
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--text); background: var(--bg3);
+    }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.55rem 1.25rem;
+      border-radius: 10px; border: none; cursor: pointer;
+      font-family: var(--font-body); font-size: 0.875rem; font-weight: 600;
+      text-decoration: none; transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      box-shadow: 0 2px 16px rgba(99,102,241,0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 24px rgba(99,102,241,0.5);
+    }
+    .btn-ghost {
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: rgba(99,102,241,0.08); }
+    .btn-sm { padding: 0.35rem 0.85rem; font-size: 0.8rem; }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-outline {
+      background: transparent; border: 1.5px solid var(--accent);
+      color: var(--accent);
+    }
+    .btn-outline:hover { background: var(--accent); color: #fff; }
+
+    /* ── AVATAR ── */
+    .avatar-wrap {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.3rem 0.75rem;
+      background: var(--bg3); border-radius: 100px; border: 1px solid var(--border);
+      cursor: pointer; transition: var(--transition); text-decoration: none; color: var(--text);
+    }
+    .avatar-wrap:hover { border-color: var(--accent); }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: 0.85rem;
+      color: #fff; flex-shrink: 0; overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ── LEVEL BADGE ── */
+    .level-badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.2rem 0.6rem; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .level-1 { background: rgba(107,114,128,0.2); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+    .level-2 { background: rgba(99,102,241,0.15); color: var(--accent); border: 1px solid rgba(99,102,241,0.3); }
+    .level-3 { background: rgba(245,158,11,0.15); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
+
+    /* ── STARS ── */
+    .stars { color: var(--gold); letter-spacing: 1px; font-size: 0.85rem; }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 2rem; }
+    .page-content { padding: 2.5rem 0; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      transition: var(--transition);
+    }
+    .card:hover { border-color: var(--border-glow); box-shadow: var(--shadow-accent); }
+    .card-sm { padding: 1.25rem; border-radius: var(--radius); }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem; font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.5rem;
+    }
+    .section-subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+
+    /* ── GRID ── */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+
+    /* ── FORM CONTROLS ── */
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label {
+      display: block; margin-bottom: 0.5rem;
+      font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .form-control, .form-select {
+      width: 100%;
+      background: var(--bg3); border: 1.5px solid var(--border);
+      color: var(--text); border-radius: 10px;
+      padding: 0.7rem 1rem; font-family: var(--font-body); font-size: 0.9rem;
+      transition: var(--transition); outline: none;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+    .form-control::placeholder { color: var(--text-dim); }
+    textarea.form-control { resize: vertical; min-height: 120px; }
+    .form-select option { background: var(--bg3); }
+
+    /* ── ALERTS ── */
+    .alert {
+      padding: 0.9rem 1.25rem; border-radius: 10px;
+      border-left: 4px solid; margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    .alert-success { background: rgba(16,185,129,0.1); border-color: var(--green); color: #6ee7b7; }
+    .alert-error { background: rgba(239,68,68,0.1); border-color: var(--red); color: #fca5a5; }
+    .alert-info { background: rgba(99,102,241,0.1); border-color: var(--accent); color: #a5b4fc; }
+
+    /* ── STATUS BADGES ── */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.3rem 0.75rem; border-radius: 100px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .status-OPEN { background: rgba(16,185,129,0.15); color: var(--green); }
+    .status-IN_NEGOTIATION { background: rgba(99,102,241,0.15); color: var(--accent); }
+    .status-IN_PROGRESS { background: rgba(6,182,212,0.15); color: var(--accent3); }
+    .status-COMPLETED { background: rgba(16,185,129,0.15); color: var(--green); }
+    .status-DELAYED { background: rgba(239,68,68,0.15); color: var(--red); }
+    .status-CANCELLED { background: rgba(107,114,128,0.15); color: #9ca3af; }
+
+    /* ── MATCH SCORE ── */
+    .match-score {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-weight: 700; font-size: 0.85rem;
+    }
+    .match-high { color: var(--green); }
+    .match-medium { color: var(--orange); }
+    .match-low { color: var(--text-muted); }
+    .match-bar {
+      height: 4px; border-radius: 100px; overflow: hidden;
+      background: var(--border); flex: 1;
+    }
+    .match-bar-fill { height: 100%; border-radius: 100px; transition: width 0.6s ease; }
+
+    /* ── MESSAGES TOAST ── */
+    .messages-container {
+      position: fixed; top: 80px; right: 1.5rem;
+      z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem;
+    }
+    .toast {
+      padding: 0.85rem 1.25rem; border-radius: 12px;
+      font-size: 0.875rem; font-weight: 500;
+      backdrop-filter: blur(20px);
+      animation: slideIn 0.3s ease, fadeOut 0.5s ease 3.5s forwards;
+      max-width: 360px;
+    }
+    .toast-success { background: rgba(16,185,129,0.9); color: #fff; }
+    .toast-error { background: rgba(239,68,68,0.9); color: #fff; }
+    .toast-info { background: rgba(99,102,241,0.9); color: #fff; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+      to { opacity: 0; transform: translateX(100%); pointer-events: none; }
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 6rem;
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 0;
+      color: var(--text-muted); font-size: 0.85rem;
+    }
+    .footer-inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ── DROPDOWN ── */
+    .dropdown { position: relative; }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); min-width: 200px;
+      box-shadow: var(--shadow); z-index: 999;
+      overflow: hidden;
+      opacity: 0; visibility: hidden; transform: translateY(-8px);
+      transition: var(--transition);
+    }
+    .dropdown.open .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-menu a, .dropdown-menu button {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 1rem; color: var(--text-muted);
+      text-decoration: none; font-size: 0.875rem;
+      background: none; border: none; width: 100%; cursor: pointer;
+      transition: var(--transition);
+    }
+    .dropdown-menu a:hover, .dropdown-menu button:hover {
+      background: var(--bg3); color: var(--text);
+    }
+    .dropdown-divider { border-top: 1px solid var(--border); margin: 0.25rem 0; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .container { padding: 0 1rem; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="{% url 'marketplace:home' %}" class="nav-logo">FreelanceUZ</a>
+    <div class="nav-links">
+      <a href="{% url 'marketplace:vacancy_list' %}">
+        <i class="fas fa-briefcase"></i> Vakansiyalar
+      </a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'negotiation:my_projects' %}">
+        <i class="fas fa-folder-open"></i> Loyihalar
+      </a>
+      {% endif %}
+      <a href="{% url 'reputation:leaderboard' %}">
+        <i class="fas fa-trophy"></i> Liderlar
+      </a>
+    </div>
+    <div class="nav-right">
+      {% if user.is_authenticated %}
+        {% if user.profile.role == 'client' %}
+        <a href="{% url 'marketplace:vacancy_create' %}" class="btn btn-primary btn-sm">
+          <i class="fas fa-plus"></i> Buyurtma
+        </a>
+        {% endif %}
+        <div class="dropdown" id="userDropdown">
+          <a class="avatar-wrap" onclick="toggleDropdown()" href="#">
+            <div class="avatar">
+              {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" alt="">
+              {% else %}
+                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+              {% endif %}
+            </div>
+            <span style="font-size:0.85rem; font-weight:600;">{{ user.get_full_name|default:user.username }}</span>
+            <span class="level-badge level-{{ user.profile.level }}">Lv.{{ user.profile.level }}</span>
+          </a>
+          <div class="dropdown-menu">
+            <a href="{% url 'marketplace:dashboard' %}"><i class="fas fa-grid-2"></i> Dashboard</a>
+            <a href="{% url 'marketplace:profile' user.username %}"><i class="fas fa-user"></i> Profil</a>
+            <a href="{% url 'marketplace:profile_edit' %}"><i class="fas fa-gear"></i> Sozlamalar</a>
+            <div class="dropdown-divider"></div>
+            <form method="post" action="{% url 'auth:logout' %}">{% csrf_token %}
+              <button type="submit"><i class="fas fa-arrow-right-from-bracket"></i> Chiqish</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <a href="{% url 'auth:login' %}" class="btn btn-ghost btn-sm">Kirish</a>
+        <a href="{% url 'auth:register' %}" class="btn btn-primary btn-sm">Ro'yxat</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+{% if messages %}
+<div class="messages-container">
+  {% for message in messages %}
+  <div class="toast toast-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>© 2026 FreelanceUZ — O'zbekiston frilanserlar platformasi</span>
+    <span style="color:var(--text-dim);">Django + AI Powered</span>
+  </div>
+</footer>
+
+<script>
+  function toggleDropdown() {
+    document.getElementById('userDropdown').classList.toggle('open');
+  }
+  document.addEventListener('click', (e) => {
+    const d = document.getElementById('userDropdown');
+    if (d && !d.contains(e.target)) d.classList.remove('open');
+  });
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

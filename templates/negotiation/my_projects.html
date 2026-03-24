@@ -1,0 +1,160 @@
+{% extends "base/base.html" %}
+{% block title %}Loyihalar — FreelanceUZ{% endblock %}
+{% block content %}
+<div class="container page-content" style="max-width:900px;">
+  <div style="margin-bottom:2rem;">
+    <h1 style="font-family:var(--font-display);font-size:1.75rem;font-weight:800;">
+      <i class="fas fa-folder-open" style="color:var(--accent);"></i> Loyihalar
+    </h1>
+    <p style="color:var(--text-muted);margin-top:.4rem;">Barcha aktiv va yakunlangan loyihalar</p>
+  </div>
+
+  {% for item in projects %}
+  {% with p=item.project %}
+  <div style="background:var(--bg2);border:1px solid var(--border);
+    border-radius:var(--radius-lg);padding:1.75rem;margin-bottom:1.25rem;
+    {% if p.status == 'IN_PROGRESS' %}border-left:3px solid var(--accent);{% endif %}
+    {% if p.status == 'COMPLETED' %}border-left:3px solid var(--green);{% endif %}">
+
+    <!-- HEADER -->
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1.25rem;">
+      <div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin-bottom:.3rem;">
+          {{ p.vacancy.title }}
+        </div>
+        <div style="font-size:.82rem;color:var(--text-muted);">
+          {% if is_company %}
+            PM:
+            {% if p.pm %}
+              <strong style="color:var(--text);">{{ p.pm.get_full_name }}</strong>
+            {% else %}
+              <span style="color:var(--orange);">Tayinlanmagan ⚠️</span>
+            {% endif %}
+          {% else %}
+            Kompaniya: <strong style="color:var(--text);">{{ p.company.get_full_name }}</strong>
+          {% endif %}
+          &nbsp;·&nbsp; {{ p.created_at|date:"d M Y" }}
+        </div>
+      </div>
+      <span class="status-badge status-{{ p.status }}">{{ p.get_status_display }}</span>
+    </div>
+
+    <!-- WORKERLAR -->
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+      {% for w in p.workers.all %}
+      <a href="{% url 'marketplace:profile' w.username %}"
+         style="display:flex;align-items:center;gap:.5rem;
+           background:var(--bg3);border:1px solid var(--border);
+           border-radius:100px;padding:.3rem .85rem;
+           text-decoration:none;color:var(--text);font-size:.82rem;
+           {% if w == p.pm %}border-color:rgba(245,158,11,.4);{% endif %}">
+        <div style="width:22px;height:22px;border-radius:50%;
+          background:linear-gradient(135deg,var(--accent),var(--accent2));
+          display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff;">
+          {{ w.first_name|first|upper }}
+        </div>
+        {{ w.get_full_name|default:w.username }}
+        {% if w == p.pm %}
+        <span style="color:var(--gold);font-size:.72rem;">👑 PM</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- CHATLAR -->
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+      {% if item.company_pm_chat %}
+        {% if is_company or p.pm == user %}
+        <a href="{% url 'negotiation:project_chat' item.company_pm_chat.pk %}"
+           class="btn btn-ghost btn-sm">
+          <i class="fas fa-building"></i>
+          Kompaniya ↔ PM chat
+        </a>
+        {% endif %}
+      {% endif %}
+
+      {% if item.pm_workers_chat %}
+        {% if p.pm == user or user in p.workers.all %}
+        <a href="{% url 'negotiation:project_chat' item.pm_workers_chat.pk %}"
+           class="btn btn-ghost btn-sm">
+          <i class="fas fa-users"></i>
+          PM ↔ Workers chat
+        </a>
+        {% endif %}
+      {% endif %}
+
+      <!-- PM TAYINLASH (kompaniya uchun, PM yo'q bo'lsa) -->
+      {% if is_company and not p.pm and p.workers.exists %}
+      <button onclick="showPmModal({{ p.pk }})" class="btn btn-primary btn-sm">
+        <i class="fas fa-crown"></i> PM tayinlash
+      </button>
+      {% endif %}
+
+      <!-- YAKUNLASH -->
+      {% if is_company and p.status == 'IN_PROGRESS' %}
+      <form method="post" action="{% url 'negotiation:complete_project' p.pk %}"
+            style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success btn-sm"
+                onclick="return confirm('Loyihani yakunlashni tasdiqlaysizmi?')">
+          <i class="fas fa-check"></i> Yakunlash
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endwith %}
+  {% empty %}
+  <div style="text-align:center;padding:4rem;color:var(--text-muted);">
+    <i class="fas fa-folder-open" style="font-size:3rem;opacity:.2;display:block;margin-bottom:1rem;"></i>
+    <h3>Hali loyiha yo'q</h3>
+    {% if is_company %}
+    <a href="{% url 'marketplace:vacancy_create' %}" class="btn btn-primary" style="margin-top:1rem;">
+      Vakansiya yaratish
+    </a>
+    {% else %}
+    <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-primary" style="margin-top:1rem;">
+      Vakansiyalarni ko'rish
+    </a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- PM MODAL -->
+<div id="pmModal" style="display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.7);z-index:9999;
+  display:none;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border);
+    border-radius:var(--radius-lg);padding:2rem;max-width:400px;width:90%;">
+    <h3 style="font-family:var(--font-display);font-weight:700;margin-bottom:1rem;">
+      PM Tayinlash
+    </h3>
+    <form id="pmForm" method="post" action="">
+      {% csrf_token %}
+      <select name="pm_id" class="form-select" style="margin-bottom:1rem;">
+        <option value="">Worker tanlang...</option>
+      </select>
+      <div style="display:flex;gap:1rem;">
+        <button type="button" onclick="closePmModal()" class="btn btn-ghost" style="flex:1;">
+          Bekor
+        </button>
+        <button type="submit" class="btn btn-primary" style="flex:1;">
+          <i class="fas fa-crown"></i> Tayinlash
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// PM modal (oddiy versiya — to'liq AJAX qo'shish mumkin)
+function showPmModal(projectId) {
+  // Sahifani reload qilib PM form sahifasiga o'tish
+  window.location.href = `/negotiation/project/${projectId}/`;
+}
+function closePmModal() {
+  document.getElementById('pmModal').style.display = 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,225 @@
+{% extends "base/base.html" %}
+{% block title %}{{ project.vacancy.title }} — Loyiha{% endblock %}
+{% block content %}
+<div class="container page-content" style="max-width:900px;">
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;">
+    <a href="{% url 'negotiation:my_projects' %}"
+       style="color:var(--text-muted);text-decoration:none;">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+    <div style="flex:1;">
+      <h1 style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;">
+        {{ project.vacancy.title }}
+      </h1>
+      <div style="display:flex;gap:.75rem;align-items:center;margin-top:.3rem;">
+        <span class="status-badge status-{{ project.status }}">
+          {{ project.get_status_display }}
+        </span>
+        <span style="color:var(--text-muted);font-size:.85rem;">
+          ${{ project.agreed_budget }} · {{ project.agreed_days }} kun
+        </span>
+      </div>
+    </div>
+    {% if is_company and project.status == 'IN_PROGRESS' %}
+    <form method="post" action="{% url 'negotiation:complete_project' project.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success"
+              onclick="return confirm('Loyihani yakunlashni tasdiqlaysizmi?')">
+        <i class="fas fa-check"></i> Yakunlash
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:2rem;">
+    <div>
+      <!-- CHATLAR -->
+      <div style="font-family:var(--font-display);font-weight:700;
+        font-size:1.05rem;margin-bottom:1rem;">
+        <i class="fas fa-comments" style="color:var(--accent);"></i> Loyiha chatlari
+      </div>
+
+      {% if not project.pm %}
+      <div class="alert alert-info" style="margin-bottom:1.5rem;">
+        <i class="fas fa-info-circle"></i>
+        {% if is_company %}
+          PM tayinlanmagan. Quyidan PM tanlang — shundan keyin chatlar ochiladi.
+        {% else %}
+          PM hali tayinlanmagan. Kompaniya tez orada tayinlaydi.
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- KOMPANIYA ↔ PM CHAT -->
+      {% if company_pm_chat %}
+        {% if is_company or is_pm %}
+        <a href="{% url 'negotiation:project_chat' company_pm_chat.pk %}"
+           style="display:flex;align-items:center;gap:1.25rem;
+             background:var(--bg2);border:1px solid rgba(99,102,241,.3);
+             border-radius:var(--radius-lg);padding:1.25rem 1.5rem;
+             text-decoration:none;color:var(--text);transition:var(--transition);
+             margin-bottom:.75rem;"
+           onmouseover="this.style.borderColor='rgba(99,102,241,.6)'"
+           onmouseout="this.style.borderColor='rgba(99,102,241,.3)'">
+          <div style="width:48px;height:48px;border-radius:50%;
+            background:linear-gradient(135deg,var(--accent),var(--accent2));
+            display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+            🏢
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:700;">Kompaniya ↔ PM</div>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:.2rem;">
+              {{ project.company.get_full_name }} ↔ {{ project.pm.get_full_name }}
+            </div>
+          </div>
+          <i class="fas fa-chevron-right" style="color:var(--text-muted);"></i>
+        </a>
+        {% endif %}
+      {% endif %}
+
+      <!-- PM ↔ WORKERLAR CHAT -->
+      {% if pm_workers_chat %}
+        {% if is_pm or is_worker %}
+        <a href="{% url 'negotiation:project_chat' pm_workers_chat.pk %}"
+           style="display:flex;align-items:center;gap:1.25rem;
+             background:var(--bg2);border:1px solid rgba(6,182,212,.3);
+             border-radius:var(--radius-lg);padding:1.25rem 1.5rem;
+             text-decoration:none;color:var(--text);transition:var(--transition);
+             margin-bottom:.75rem;"
+           onmouseover="this.style.borderColor='rgba(6,182,212,.6)'"
+           onmouseout="this.style.borderColor='rgba(6,182,212,.3)'">
+          <div style="width:48px;height:48px;border-radius:50%;
+            background:linear-gradient(135deg,var(--accent3),#0891b2);
+            display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+            👥
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:700;">PM ↔ Workers</div>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:.2rem;">
+              {{ project.pm.get_full_name }} + {{ project.workers.count }} worker
+            </div>
+          </div>
+          <i class="fas fa-chevron-right" style="color:var(--text-muted);"></i>
+        </a>
+        {% endif %}
+      {% endif %}
+
+      <!-- PM TAYINLASH (kompaniya uchun) -->
+      {% if is_company and not project.pm %}
+      <div style="background:var(--bg2);border:1px solid rgba(245,158,11,.3);
+        border-radius:var(--radius-lg);padding:1.5rem;margin-top:1rem;">
+        <div style="font-family:var(--font-display);font-weight:700;
+          margin-bottom:1rem;color:var(--gold);">
+          <i class="fas fa-crown"></i> PM Tayinlash
+        </div>
+        <form method="post" action="{% url 'negotiation:assign_pm' project.pk %}">
+          {% csrf_token %}
+          <div style="margin-bottom:1rem;">
+            <label class="form-label">Workerdan PM tanlang:</label>
+            <select name="pm_id" class="form-select">
+              <option value="">— Tanlang —</option>
+              {% for w in project.workers.all %}
+              <option value="{{ w.pk }}">
+                {{ w.get_full_name|default:w.username }}
+                (★{{ w.profile.rating }}, {{ w.profile.completed_jobs_count }} ish)
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            <i class="fas fa-crown"></i> PM Tayinlash
+          </button>
+        </form>
+        <div style="font-size:.8rem;color:var(--text-muted);margin-top:.75rem;">
+          PM tayinlangandan keyin 2 ta chat avtomatik ochiladi
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <!-- JAMOA -->
+      <div style="background:var(--bg2);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;">
+        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
+          color:var(--text-muted);font-weight:700;margin-bottom:1rem;">
+          Jamoa
+        </div>
+
+        <!-- Kompaniya -->
+        <div style="display:flex;align-items:center;gap:.75rem;
+          padding:.6rem 0;border-bottom:1px solid var(--border);">
+          <div style="width:36px;height:36px;border-radius:50%;
+            background:linear-gradient(135deg,var(--accent2),var(--accent));
+            display:flex;align-items:center;justify-content:center;
+            font-weight:700;color:#fff;font-size:.85rem;">
+            {{ project.company.first_name|first|upper }}
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:.875rem;">
+              {{ project.company.get_full_name }}
+            </div>
+          </div>
+          <span style="background:rgba(99,102,241,.12);color:var(--accent);
+            padding:.15rem .5rem;border-radius:100px;font-size:.7rem;">
+            Kompaniya
+          </span>
+        </div>
+
+        <!-- Workerlar -->
+        {% for w in project.workers.all %}
+        <div style="display:flex;align-items:center;gap:.75rem;
+          padding:.6rem 0;border-bottom:1px solid var(--border);">
+          <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;
+            background:linear-gradient(135deg,var(--accent),var(--accent3));
+            display:flex;align-items:center;justify-content:center;
+            font-weight:700;color:#fff;font-size:.85rem;">
+            {% if w.profile.avatar %}
+            <img src="{{ w.profile.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}{{ w.first_name|first|upper }}{% endif %}
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:.875rem;">{{ w.get_full_name }}</div>
+            <div style="font-size:.72rem;color:var(--text-muted);">★ {{ w.profile.rating }}</div>
+          </div>
+          {% if w == project.pm %}
+          <span style="background:rgba(245,158,11,.15);color:var(--gold);
+            padding:.15rem .5rem;border-radius:100px;font-size:.7rem;">👑 PM</span>
+          {% else %}
+          <span style="background:rgba(6,182,212,.12);color:var(--accent3);
+            padding:.15rem .5rem;border-radius:100px;font-size:.7rem;">Worker</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- LOYIHA INFO -->
+      <div style="background:var(--bg2);border:1px solid var(--border);
+        border-radius:var(--radius-lg);padding:1.5rem;">
+        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
+          color:var(--text-muted);font-weight:700;margin-bottom:1rem;">
+          Ma'lumotlar
+        </div>
+        <div class="info-row" style="display:flex;justify-content:space-between;
+          padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.875rem;">
+          <span style="color:var(--text-muted);">Byudjet</span>
+          <strong style="color:var(--green);">${{ project.agreed_budget }}</strong>
+        </div>
+        <div class="info-row" style="display:flex;justify-content:space-between;
+          padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.875rem;">
+          <span style="color:var(--text-muted);">Muddat</span>
+          <strong>{{ project.agreed_days }} kun</strong>
+        </div>
+        {% if project.deadline %}
+        <div class="info-row" style="display:flex;justify-content:space-between;
+          padding:.55rem 0;font-size:.875rem;">
+          <span style="color:var(--text-muted);">Deadline</span>
+          <strong>{{ project.deadline|date:"d M Y" }}</strong>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

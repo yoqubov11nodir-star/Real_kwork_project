@@ -1,0 +1,197 @@
+{% extends "base/base.html" %}
+{% block title %}Vakansiyalar — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .page-header {
+    padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg,rgba(99,102,241,.05) 0%,transparent 100%);
+  }
+  .filter-bar {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.25rem 1.5rem;
+    display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .search-wrap { flex:1; min-width:220px; position:relative; }
+  .search-wrap i { position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-dim); }
+  .search-wrap input { padding-left:2.75rem !important; }
+  .vac-row {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:var(--radius-lg); padding:1.5rem;
+    display:flex; gap:1.25rem; text-decoration:none; color:var(--text);
+    transition:var(--transition); margin-bottom:1rem; position:relative; overflow:hidden;
+  }
+  .vac-row::after {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:linear-gradient(180deg,var(--accent),var(--accent3));
+    transform:scaleY(0); transform-origin:top; transition:.25s ease;
+  }
+  .vac-row:hover { border-color:rgba(99,102,241,.35); }
+  .vac-row:hover::after { transform:scaleY(1); }
+  .vac-left { flex:1; }
+  .vac-right {
+    display:flex; flex-direction:column; align-items:flex-end;
+    gap:.75rem; min-width:150px;
+  }
+  .skill-tag {
+    background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.2);
+    color:var(--accent); padding:.15rem .6rem; border-radius:6px; font-size:.75rem;
+  }
+  .budget-range {
+    font-family:var(--font-display); font-weight:700;
+    color:var(--green); font-size:1.1rem;
+  }
+  .worker-badge {
+    background:rgba(6,182,212,.12); border:1px solid rgba(6,182,212,.25);
+    color:var(--accent3); padding:.2rem .65rem; border-radius:100px; font-size:.75rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <h1 class="section-title">Vakansiyalar</h1>
+        <p style="color:var(--text-muted);">Ochiq loyihalar va worker talab qilinayotgan ishlar</p>
+      </div>
+      {% if user.is_authenticated and user.profile.role == 'client' %}
+      <a href="{% url 'marketplace:vacancy_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Yangi vakansiya
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container page-content">
+  <form method="get" class="filter-bar">
+    <div class="search-wrap">
+      <i class="fas fa-search"></i>
+      <input class="form-control" type="text" name="q"
+             value="{{ q }}" placeholder="Kalit so'z...">
+    </div>
+    <select class="form-select" name="category" style="width:180px;">
+      <option value="">Barcha kategoriya</option>
+      {% for val, lbl in categories %}
+      <option value="{{ val }}" {% if category == val %}selected{% endif %}>{{ lbl }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">
+      <i class="fas fa-search"></i> Qidirish
+    </button>
+    {% if q or category %}
+    <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-ghost">
+      <i class="fas fa-times"></i>
+    </a>
+    {% endif %}
+  </form>
+
+  {% if vacancies_with_scores %}
+  <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+    <i class="fas fa-brain" style="color:var(--accent);"></i>
+    <span style="color:var(--text-muted);font-size:.875rem;">
+      AI moslik foizi sizning ko'nikmalaringiz asosida hisoblanmoqda
+    </span>
+  </div>
+  {% for item in vacancies_with_scores %}
+  {% with v=item.vacancy s=item.match_score %}
+  <a href="{% url 'marketplace:vacancy_detail' v.pk %}" class="vac-row">
+    <div class="vac-left">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;flex-wrap:wrap;">
+        <span class="tag">{{ v.get_category_display }}</span>
+        <span class="status-badge status-{{ v.status }}">{{ v.get_status_display }}</span>
+        {% if v.is_team_project %}
+        <span class="worker-badge"><i class="fas fa-users"></i> Jamoa loyihasi</span>
+        {% endif %}
+        <span style="color:var(--text-dim);font-size:.8rem;margin-left:auto;">
+          {{ v.created_at|timesince }} oldin
+        </span>
+      </div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin-bottom:.4rem;">
+        {{ v.title }}
+      </div>
+      <div style="color:var(--text-muted);font-size:.875rem;line-height:1.5;">
+        {{ v.description|truncatechars:120 }}
+      </div>
+      {% if v.get_skills_list %}
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem;">
+        {% for skill in v.get_skills_list|slice:":5" %}
+        <span class="skill-tag">{{ skill }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="vac-right">
+      <div style="text-align:center;">
+        <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;
+          color:{% if s >= 70 %}var(--green){% elif s >= 40 %}var(--orange){% else %}var(--text-muted){% endif %};">
+          {{ s }}%
+        </div>
+        <div style="font-size:.7rem;color:var(--text-dim);">moslik</div>
+      </div>
+      <div class="budget-range">${{ v.budget_min }}–${{ v.budget_max }}</div>
+      <div style="font-size:.8rem;color:var(--text-muted);">
+        <i class="fas fa-clock"></i> {{ v.deadline_days }} kun
+      </div>
+      <div style="font-size:.8rem;color:var(--accent3);">
+        <i class="fas fa-users"></i> {{ v.required_workers }} worker
+      </div>
+    </div>
+  </a>
+  {% endwith %}
+  {% endfor %}
+
+  {% else %}
+  {% for v in vacancies %}
+  <a href="{% url 'marketplace:vacancy_detail' v.pk %}" class="vac-row">
+    <div class="vac-left">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;flex-wrap:wrap;">
+        <span class="tag">{{ v.get_category_display }}</span>
+        <span class="status-badge status-{{ v.status }}">{{ v.get_status_display }}</span>
+        {% if v.is_team_project %}
+        <span class="worker-badge"><i class="fas fa-users"></i> Jamoa</span>
+        {% endif %}
+        <span style="color:var(--text-dim);font-size:.8rem;margin-left:auto;">
+          {{ v.created_at|timesince }} oldin
+        </span>
+      </div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin-bottom:.4rem;">
+        {{ v.title }}
+      </div>
+      <div style="color:var(--text-muted);font-size:.875rem;line-height:1.5;">
+        {{ v.description|truncatechars:120 }}
+      </div>
+      {% if v.get_skills_list %}
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem;">
+        {% for skill in v.get_skills_list|slice:":5" %}
+        <span class="skill-tag">{{ skill }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="vac-right">
+      <span class="status-badge status-{{ v.status }}">{{ v.get_status_display }}</span>
+      <div class="budget-range">${{ v.budget_min }}–${{ v.budget_max }}</div>
+      <div style="font-size:.8rem;color:var(--text-muted);">
+        <i class="fas fa-clock"></i> {{ v.deadline_days }} kun
+      </div>
+      <div style="font-size:.8rem;color:var(--accent3);">
+        <i class="fas fa-users"></i> {{ v.required_workers }} worker
+      </div>
+    </div>
+  </a>
+  {% empty %}
+  <div style="text-align:center;padding:5rem 2rem;color:var(--text-muted);">
+    <i class="fas fa-briefcase" style="font-size:3rem;opacity:.2;display:block;margin-bottom:1rem;"></i>
+    <h3>Vakansiya topilmadi</h3>
+    <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-ghost" style="margin-top:1rem;">
+      Filterni tozalash
+    </a>
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

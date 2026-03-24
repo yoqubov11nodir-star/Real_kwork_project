@@ -1,0 +1,228 @@
+{% extends "base/base.html" %}
+{% block title %}{{ profile_user.get_full_name|default:profile_user.username }} — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .profile-hero {
+    background: linear-gradient(180deg, rgba(99,102,241,0.06) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border); padding: 3rem 0 0;
+  }
+  .profile-top { display: flex; gap: 2rem; align-items: flex-start; padding-bottom: 2rem; }
+  .profile-avatar-xl {
+    width: 100px; height: 100px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 2.5rem; font-weight: 800; color: #fff; overflow: hidden;
+    border: 3px solid var(--border);
+  }
+  .profile-avatar-xl img { width:100%;height:100%;object-fit:cover; }
+  .profile-body { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; padding: 2rem 0 4rem; }
+  .skills-wrap { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+  .badge-chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25);
+    color: var(--gold); padding: 0.25rem 0.75rem; border-radius: 100px; font-size: 0.8rem;
+    margin: 0.2rem;
+  }
+  .review-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.25rem; margin-bottom: 1rem;
+  }
+  .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+  .reviewer-info { display: flex; align-items: center; gap: 0.6rem; }
+  .rev-av {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent2); display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; color: #fff;
+  }
+  .score-row {
+    display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap;
+  }
+  .score-item {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.78rem; color: var(--text-muted);
+  }
+  .score-item strong { color: var(--text); }
+  .sidebar-stat {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.65rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem;
+  }
+  .sidebar-stat:last-child { border-bottom: none; }
+  .rate-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .rate-label { width: 24px; font-size: 0.8rem; color: var(--gold); text-align: right; }
+  .rate-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 100px; overflow: hidden; }
+  .rate-bar-fill { height: 100%; background: var(--gold); border-radius: 100px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-hero">
+  <div class="container">
+    <div class="profile-top">
+      <div class="profile-avatar-xl">
+        {% if profile.avatar %}<img src="{{ profile.avatar.url }}">
+        {% else %}{{ profile_user.first_name|first|upper }}{{ profile_user.last_name|first|upper }}{% endif %}
+      </div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+          <h1 style="font-family:var(--font-display);font-size:1.75rem;font-weight:800;">
+            {{ profile_user.get_full_name|default:profile_user.username }}
+          </h1>
+          <span class="level-badge level-{{ profile.level }}" style="font-size:0.85rem;padding:0.3rem 0.85rem;">
+            Level {{ profile.level }}
+            {% if profile.level == 3 %}👑{% elif profile.level == 2 %}⭐{% else %}🌱{% endif %}
+          </span>
+        </div>
+        <div style="color:var(--text-muted);margin-bottom:0.75rem;">{{ profile.get_role_display }}</div>
+
+        <!-- STARS -->
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+          <span style="color:var(--gold);font-size:1.1rem;">
+            {% with r=profile.rating|floatformat:0|add:0 %}
+            {% for i in "12345" %}{% if forloop.counter <= profile.rating %}★{% else %}☆{% endif %}{% endfor %}
+            {% endwith %}
+          </span>
+          <span style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;">{{ profile.rating|floatformat:1 }}</span>
+          <span style="color:var(--text-muted);font-size:0.875rem;">({{ profile.completed_jobs_count }} ish yakunlangan)</span>
+        </div>
+
+        {% if profile.bio %}
+        <p style="color:var(--text-muted);line-height:1.7;max-width:600px;">{{ profile.bio }}</p>
+        {% endif %}
+
+        {% if profile.skills %}
+        <div class="skills-wrap">
+          {% for skill in profile.get_skills_list %}
+          <span style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);color:var(--accent);padding:0.2rem 0.7rem;border-radius:100px;font-size:0.8rem;">{{ skill }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- BADGES -->
+        {% with profile_user.badges.all as badges %}
+        {% if badges %}
+        <div style="margin-top:0.75rem;">
+          {% for badge in badges %}
+          <span class="badge-chip">{{ badge.get_badge_type_display }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+      </div>
+
+      <!-- ACTIONS -->
+      <div style="display:flex;flex-direction:column;gap:0.75rem;">
+        {% if user.is_authenticated and user != profile_user %}
+        {% if user.profile.role == 'client' %}
+        <a href="{% url 'marketplace:order_create' %}" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Ish berish
+        </a>
+        {% endif %}
+        <a href="{% url 'reputation:freelancer_reviews' profile_user.username %}" class="btn btn-ghost">
+          <i class="fas fa-star"></i> Sharhlar
+        </a>
+        {% endif %}
+        {% if user == profile_user %}
+        <a href="{% url 'marketplace:profile_edit' %}" class="btn btn-ghost">
+          <i class="fas fa-pen"></i> Tahrirlash
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="profile-body">
+    <!-- REVIEWS -->
+    <div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:1.15rem;margin-bottom:1.25rem;">
+        <i class="fas fa-star" style="color:var(--gold);"></i> Sharhlar ({{ reviews|length }})
+      </div>
+      {% for review in reviews %}
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-info">
+            <div class="rev-av">{{ review.reviewer.first_name|first|upper }}</div>
+            <div>
+              <div style="font-weight:600;font-size:0.875rem;">{{ review.reviewer.get_full_name|default:review.reviewer.username }}</div>
+              <div style="color:var(--text-dim);font-size:0.75rem;">{{ review.created_at|date:"d M Y" }}</div>
+            </div>
+          </div>
+          <div style="color:var(--gold);font-size:1rem;">
+            {% for i in "12345" %}{% if forloop.counter <= review.stars %}★{% else %}☆{% endif %}{% endfor %}
+          </div>
+        </div>
+        <div class="score-row">
+          <div class="score-item"><i class="fas fa-comments"></i> Muloqot: <strong>{{ review.communication_score }}/5</strong></div>
+          <div class="score-item"><i class="fas fa-medal"></i> Sifat: <strong>{{ review.quality_score }}/5</strong></div>
+          <div class="score-item"><i class="fas fa-clock"></i> Muddat: <strong>{{ review.deadline_score }}/5</strong></div>
+        </div>
+        <p style="color:var(--text-muted);font-size:0.875rem;line-height:1.6;">{{ review.comment }}</p>
+        {% if review.order %}
+        <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);">
+          <a href="{% url 'marketplace:order_detail' review.order.pk %}" style="color:var(--accent);font-size:0.8rem;text-decoration:none;">
+            <i class="fas fa-briefcase"></i> {{ review.order.title|truncatechars:50 }}
+          </a>
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div style="text-align:center;padding:3rem;color:var(--text-muted);">
+        <i class="fas fa-star" style="font-size:2rem;opacity:0.2;"></i>
+        <p style="margin-top:0.75rem;">Hali sharh yo'q</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <div class="sidebar-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);font-weight:700;margin-bottom:1rem;">Statistika</div>
+        <div class="sidebar-stat">
+          <span style="color:var(--text-muted);">Yakunlangan ishlar</span>
+          <strong>{{ profile.completed_jobs_count }}</strong>
+        </div>
+        <div class="sidebar-stat">
+          <span style="color:var(--text-muted);">O'rtacha reyting</span>
+          <strong style="color:var(--gold);">{{ profile.rating|floatformat:1 }} ★</strong>
+        </div>
+        {% if profile.hourly_rate %}
+        <div class="sidebar-stat">
+          <span style="color:var(--text-muted);">Soatlik narx</span>
+          <strong style="color:var(--green);">${{ profile.hourly_rate }}/soat</strong>
+        </div>
+        {% endif %}
+        {% if profile.location %}
+        <div class="sidebar-stat">
+          <span style="color:var(--text-muted);"><i class="fas fa-location-dot"></i> Joylashuv</span>
+          <strong>{{ profile.location }}</strong>
+        </div>
+        {% endif %}
+        {% if profile.portfolio_url %}
+        <div class="sidebar-stat">
+          <span style="color:var(--text-muted);">Portfolio</span>
+          <a href="{{ profile.portfolio_url }}" target="_blank" style="color:var(--accent);font-size:0.85rem;">Ko'rish <i class="fas fa-external-link-alt"></i></a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- LEVEL CARD -->
+      <div style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1));border:1px solid rgba(99,102,241,0.3);border-radius:var(--radius-lg);padding:1.5rem;">
+        <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent);font-weight:700;margin-bottom:1rem;">Daraja tizimi</div>
+        {% for lvl in "123" %}
+        <div style="display:flex;align-items:center;gap:0.85rem;padding:0.6rem 0;
+          {% if forloop.counter == profile.level %}background:rgba(99,102,241,0.1);border-radius:8px;padding:0.6rem 0.75rem;{% endif %}">
+          <span class="level-badge level-{{ forloop.counter }}">Lv.{{ forloop.counter }}</span>
+          <div style="font-size:0.8rem;color:var(--text-muted);">
+            {% if forloop.counter == 1 %}Yangi frilanser (default)
+            {% elif forloop.counter == 2 %}5 ish + 4.5+ ball
+            {% else %}20 ish + muvaffaqiyatli{% endif %}
+          </div>
+          {% if forloop.counter == profile.level %}<i class="fas fa-check" style="color:var(--accent);margin-left:auto;"></i>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

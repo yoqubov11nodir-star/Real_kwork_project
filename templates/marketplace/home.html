@@ -1,0 +1,305 @@
+{% extends "base/base.html" %}
+{% block title %}FreelanceUZ — O'zbekiston frilanserlar platformasi{% endblock %}
+{% block extra_css %}
+<style>
+  .hero {
+    position:relative; overflow:hidden;
+    padding:7rem 0 6rem; text-align:center;
+  }
+  .hero::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% -10%,rgba(99,102,241,.25) 0%,transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 50%,rgba(139,92,246,.12) 0%,transparent 60%);
+    pointer-events:none;
+  }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.3);
+    color:var(--accent); padding:.35rem 1rem; border-radius:100px;
+    font-size:.8rem; font-weight:600; margin-bottom:2rem;
+    animation:pulse 3s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.3)}
+    50%{box-shadow:0 0 0 6px rgba(99,102,241,0)}
+  }
+  .hero-title {
+    font-family:var(--font-display);
+    font-size:clamp(2.5rem,6vw,5rem);
+    font-weight:800; line-height:1.05;
+    letter-spacing:-2px; margin-bottom:1.5rem;
+  }
+  .hero-title span {
+    background:linear-gradient(135deg,var(--accent),var(--accent3));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .hero-sub {
+    font-size:1.15rem; color:var(--text-muted);
+    max-width:540px; margin:0 auto 2.5rem; line-height:1.7;
+  }
+  .hero-cta { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+  .hero-cta .btn { padding:.75rem 2rem; font-size:1rem; }
+  .hero-stats {
+    display:flex; gap:3rem; justify-content:center;
+    margin-top:4rem; padding-top:3rem;
+    border-top:1px solid var(--border);
+  }
+  .stat-num {
+    font-family:var(--font-display);
+    font-size:2.2rem; font-weight:800;
+    background:linear-gradient(135deg,var(--text),var(--accent));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .stat-label { color:var(--text-muted); font-size:.875rem; margin-top:.2rem; }
+  .vac-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:var(--radius-lg); padding:1.5rem;
+    text-decoration:none; display:block; color:var(--text);
+    transition:var(--transition); position:relative; overflow:hidden;
+  }
+  .vac-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,var(--accent),var(--accent3));
+    transform:scaleX(0); transform-origin:left; transition:.3s ease;
+  }
+  .vac-card:hover {
+    border-color:rgba(99,102,241,.4);
+    transform:translateY(-2px);
+    box-shadow:0 8px 32px rgba(0,0,0,.3);
+  }
+  .vac-card:hover::before { transform:scaleX(1); }
+  .vac-title {
+    font-family:var(--font-display);
+    font-size:1.05rem; font-weight:700; margin-bottom:.5rem;
+  }
+  .vac-desc { color:var(--text-muted); font-size:.875rem; line-height:1.5; margin-bottom:1rem; }
+  .fl-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:var(--radius-lg); padding:1.5rem;
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    text-decoration:none; color:var(--text); transition:var(--transition);
+  }
+  .fl-card:hover {
+    border-color:rgba(99,102,241,.4);
+    transform:translateY(-3px);
+    box-shadow:var(--shadow-accent);
+  }
+  .fl-av {
+    width:64px; height:64px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:800; font-size:1.4rem;
+    color:#fff; margin-bottom:1rem; overflow:hidden;
+  }
+  .fl-av img { width:100%;height:100%;object-fit:cover; }
+  .feature-icon {
+    width:48px; height:48px;
+    background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(139,92,246,.2));
+    border:1px solid rgba(99,102,241,.3); border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.25rem; margin-bottom:1rem; color:var(--accent);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <i class="fas fa-bolt"></i>
+      AI tomonidan mos workerlar aniqlanadi
+    </div>
+    <h1 class="hero-title">
+      O'zbekistoning<br>
+      <span>Frilanserlar Platformasi</span>
+    </h1>
+    <p class="hero-sub">
+      Vakansiya e'lon qiling, workerlar bilan muzokaralar olib boring,
+      PM tayinlang va loyihangizni muvaffaqiyatli yakunlang.
+    </p>
+    <div class="hero-cta">
+      {% if user.is_authenticated %}
+        {% if user.profile.role == 'client' %}
+          <a href="{% url 'marketplace:vacancy_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Vakansiya e'lon qilish
+          </a>
+        {% else %}
+          <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-primary">
+            <i class="fas fa-briefcase"></i> Vakansiyalarni ko'rish
+          </a>
+        {% endif %}
+        <a href="{% url 'marketplace:dashboard' %}" class="btn btn-ghost">
+          Dashboard <i class="fas fa-arrow-right"></i>
+        </a>
+      {% else %}
+        <a href="{% url 'auth:register' %}" class="btn btn-primary">
+          <i class="fas fa-user-plus"></i> Boshlash — Bepul
+        </a>
+        <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-ghost">
+          Vakansiyalarni ko'rish
+        </a>
+      {% endif %}
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-num">2,400+</div>
+        <div class="stat-label">Workerlar</div>
+      </div>
+      <div>
+        <div class="stat-num">8,900+</div>
+        <div class="stat-label">Yakunlangan loyihalar</div>
+      </div>
+      <div>
+        <div class="stat-num">$1.2M+</div>
+        <div class="stat-label">To'langan summa</div>
+      </div>
+      <div>
+        <div class="stat-num">4.9 ⭐</div>
+        <div class="stat-label">O'rtacha baho</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section style="padding:4rem 0;background:var(--bg2);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="grid-3">
+      <div class="card card-sm">
+        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+        <h3 style="font-family:var(--font-display);font-weight:700;margin-bottom:.5rem;">
+          AI Moslik Tizimi
+        </h3>
+        <p style="color:var(--text-muted);font-size:.875rem;line-height:1.6;">
+          Vakansiya va worker ma'lumotlarini AI tahlil qilib,
+          eng mos mutaxassislarni % bilan ko'rsatadi.
+        </p>
+      </div>
+      <div class="card card-sm">
+        <div class="feature-icon"><i class="fas fa-comments-dollar"></i></div>
+        <h3 style="font-family:var(--font-display);font-weight:700;margin-bottom:.5rem;">
+          Muzokaralar Tizimi
+        </h3>
+        <p style="color:var(--text-muted);font-size:.875rem;line-height:1.6;">
+          Worker narx/muddat taklif yuboradi, kompaniya qabul qilmagunicha
+          loyiha boshlanmaydi.
+        </p>
+      </div>
+      <div class="card card-sm">
+        <div class="feature-icon"><i class="fas fa-crown"></i></div>
+        <h3 style="font-family:var(--font-display);font-weight:700;margin-bottom:.5rem;">
+          PM Tizimi
+        </h3>
+        <p style="color:var(--text-muted);font-size:.875rem;line-height:1.6;">
+          Kompaniya PM tayinlaydi. PM kompaniya va workerlar
+          o'rtasida ko'prik vazifasini o'taydi.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- YANGI VAKANSIYALAR -->
+<section class="page-content">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;">
+      <div>
+        <h2 class="section-title">Yangi Vakansiyalar</h2>
+        <p style="color:var(--text-muted);">Hozir ochiq va worker kutayotgan loyihalar</p>
+      </div>
+      <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-ghost btn-sm">
+        Barchasi <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+    <div class="grid-3">
+      {% for vacancy in recent_vacancies %}
+      <a href="{% url 'marketplace:vacancy_detail' vacancy.pk %}" class="vac-card">
+        <div style="display:flex;justify-content:space-between;
+          align-items:start;margin-bottom:.75rem;">
+          <span class="tag">{{ vacancy.get_category_display }}</span>
+          <span class="status-badge status-{{ vacancy.status }}">
+            {{ vacancy.get_status_display }}
+          </span>
+        </div>
+        <div class="vac-title">{{ vacancy.title }}</div>
+        <div class="vac-desc">{{ vacancy.description|truncatechars:100 }}</div>
+        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+          <span style="font-family:var(--font-display);font-weight:700;
+            color:var(--green);font-size:1.05rem;">
+            ${{ vacancy.budget_min }}–${{ vacancy.budget_max }}
+          </span>
+          {% if vacancy.deadline_days %}
+          <span style="color:var(--text-muted);font-size:.8rem;">
+            <i class="fas fa-clock"></i> {{ vacancy.deadline_days }} kun
+          </span>
+          {% endif %}
+          <span style="color:var(--accent3);font-size:.8rem;">
+            <i class="fas fa-users"></i> {{ vacancy.required_workers }} worker
+          </span>
+          <span style="color:var(--text-dim);font-size:.8rem;margin-left:auto;">
+            {{ vacancy.created_at|timesince }} oldin
+          </span>
+        </div>
+      </a>
+      {% empty %}
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">
+        <i class="fas fa-briefcase" style="font-size:2rem;margin-bottom:1rem;opacity:.3;display:block;"></i>
+        Hozircha vakansiya yo'q
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- TOP WORKERLAR -->
+<section style="padding:3rem 0 5rem;">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;">
+      <div>
+        <h2 class="section-title">Top Workerlar</h2>
+        <p style="color:var(--text-muted);">Eng yuqori baholangan mutaxassislar</p>
+      </div>
+      <a href="{% url 'reputation:leaderboard' %}" class="btn btn-ghost btn-sm">
+        Liderlar <i class="fas fa-trophy"></i>
+      </a>
+    </div>
+    <div class="grid-4">
+      {% for profile in top_workers %}
+      <a href="{% url 'marketplace:profile' profile.user.username %}" class="fl-card">
+        <div class="fl-av">
+          {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="">
+          {% else %}
+            {{ profile.user.first_name|first|upper }}{{ profile.user.last_name|first|upper }}
+          {% endif %}
+        </div>
+        <span class="level-badge level-{{ profile.level }}" style="margin-bottom:.5rem;">
+          Level {{ profile.level }}
+          {% if profile.level == 3 %}👑{% elif profile.level == 2 %}⭐{% endif %}
+        </span>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;margin-bottom:.25rem;">
+          {{ profile.user.get_full_name|default:profile.user.username }}
+        </div>
+        <div style="color:var(--text-muted);font-size:.8rem;margin:.4rem 0;">
+          {{ profile.skills|truncatechars:40 }}
+        </div>
+        <div style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;">
+          <span style="color:var(--gold);">★</span>
+          <span style="font-weight:600;">{{ profile.rating }}</span>
+          <span style="color:var(--text-dim);">
+            ({{ profile.completed_jobs_count }} ish)
+          </span>
+        </div>
+      </a>
+      {% empty %}
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted);">
+        Hali worker yo'q
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

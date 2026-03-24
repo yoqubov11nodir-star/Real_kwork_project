@@ -1,0 +1,16 @@
+{% extends "base/base.html" %}
+{% block title %}O'chirishni tasdiqlash{% endblock %}
+{% block content %}
+<div class="container" style="max-width:480px;padding:4rem 2rem;text-align:center;">
+  <div style="font-size:3rem;margin-bottom:1rem;">⚠️</div>
+  <h2 style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;margin-bottom:0.75rem;">O'chirishni tasdiqlang</h2>
+  <p style="color:var(--text-muted);margin-bottom:2rem;">
+    "<strong style="color:var(--text);">{{ order.title }}</strong>" buyurtmasini o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.
+  </p>
+  <form method="post" style="display:flex;gap:1rem;justify-content:center;">
+    {% csrf_token %}
+    <a href="{% url 'marketplace:order_detail' order.pk %}" class="btn btn-ghost">Bekor qilish</a>
+    <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Ha, o'chirish</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,279 @@
+{% extends "base/base.html" %}
+{% block title %}Dashboard — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .dash-header {
+    padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .stat-card-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; margin-bottom: 0.5rem;
+  }
+  .stat-val {
+    font-family: var(--font-display);
+    font-size: 2rem; font-weight: 800; line-height: 1;
+  }
+  .stat-lbl { color: var(--text-muted); font-size: 0.85rem; }
+  .section-hd {
+    font-family: var(--font-display); font-weight: 700; font-size: 1.15rem;
+    margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem;
+  }
+  .order-mini {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.25rem;
+    display: flex; align-items: center; gap: 1rem;
+    text-decoration: none; color: var(--text);
+    transition: var(--transition); margin-bottom: 0.6rem;
+  }
+  .order-mini:hover { border-color: var(--accent); }
+  .order-mini-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(99,102,241,0.15); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .progress-bar {
+    height: 6px; border-radius: 100px; background: var(--border); overflow: hidden;
+    margin-top: 0.75rem;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transition: width 0.8s ease;
+  }
+  .level-card {
+    background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: var(--radius-lg); padding: 1.75rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-header">
+  <div class="container">
+    <div style="display:flex;align-items:center;gap:1.5rem;">
+      <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+        display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:#fff;overflow:hidden;">
+        {% if user.profile.avatar %}<img src="{{ user.profile.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">
+        {% else %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% endif %}
+      </div>
+      <div>
+        <div style="color:var(--text-muted);font-size:0.875rem;">Xush kelibsiz,</div>
+        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;">
+          {{ user.get_full_name|default:user.username }}
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.3rem;">
+          <span class="level-badge level-{{ profile.level }}">
+            Level {{ profile.level }}
+            {% if profile.level == 1 %}🌱{% elif profile.level == 2 %}⭐{% else %}👑{% endif %}
+          </span>
+          <span style="color:var(--text-muted);font-size:0.8rem;">
+            {{ profile.get_role_display }}
+          </span>
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:0.75rem;">
+        <a href="{% url 'marketplace:profile_edit' %}" class="btn btn-ghost btn-sm">
+          <i class="fas fa-gear"></i> Profil
+        </a>
+        {% if profile.role == 'client' %}
+        <a href="{% url 'marketplace:vacancy_create' %}" class="btn btn-primary btn-sm">
+          <i class="fas fa-plus"></i> Buyurtma
+        </a>
+        {% else %}
+        <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-primary btn-sm">
+          <i class="fas fa-search"></i> Ish qidirish
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container page-content">
+  {% if profile.role == 'freelancer' %}
+  <div class="grid-4" style="margin-bottom:2rem;">
+    <div class="stat-card">
+      <div class="stat-card-icon" style="background:rgba(16,185,129,0.15);color:var(--green);">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-val">{{ profile.completed_jobs_count }}</div>
+      <div class="stat-lbl">Yakunlangan ishlar</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon" style="background:rgba(245,158,11,0.15);color:var(--gold);">
+        <i class="fas fa-star"></i>
+      </div>
+      <div class="stat-val">{{ profile.rating|floatformat:1 }}</div>
+      <div class="stat-lbl">O'rtacha reyting</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon" style="background:rgba(99,102,241,0.15);color:var(--accent);">
+        <i class="fas fa-comments"></i>
+      </div>
+      <div class="stat-val">{{ my_projects|length }}</div>
+      <div class="stat-lbl">Aktiv loyihalar</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon" style="background:rgba(6,182,212,0.15);color:var(--accent3);">
+        <i class="fas fa-layer-group"></i>
+      </div>
+      <div class="stat-val">{{ profile.level }}</div>
+      <div class="stat-lbl">Level</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:2rem;">
+    <div>
+      <div class="level-card" style="margin-bottom:1.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <div>
+            <div style="font-family:var(--font-display);font-weight:700;font-size:1.05rem;">
+              {% if profile.level == 1 %}Level 1 → Level 2 yo'li{% elif profile.level == 2 %}Level 2 → Level 3 yo'li{% else %}👑 Siz Level 3 dasiz!{% endif %}
+            </div>
+            <div style="color:var(--text-muted);font-size:0.8rem;margin-top:0.25rem;">
+              {% if profile.level == 1 %}5 ish + 4.5+ ball kerak{% elif profile.level == 2 %}20 ish kerak{% else %}Barcha darajaga yetdingiz{% endif %}
+            </div>
+          </div>
+          <span class="level-badge level-{{ profile.level }}">Lv.{{ profile.level }}</span>
+        </div>
+        {% if profile.level == 1 %}
+          {% with pct=profile.completed_jobs_count|floatformat:0 %}
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.4rem;">
+            <span>{{ profile.completed_jobs_count }}/5 ish</span>
+            <span>Reyting: {{ profile.rating|floatformat:1 }}/4.5</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:{% widthratio profile.completed_jobs_count 5 100 %}%;"></div>
+          </div>
+          {% endwith %}
+        {% elif profile.level == 2 %}
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.4rem;">
+            <span>{{ profile.completed_jobs_count }}/20 ish</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:{% widthratio profile.completed_jobs_count 20 100 %}%;"></div>
+          </div>
+        {% else %}
+          <div style="text-align:center;font-size:2rem;margin-top:0.5rem;">🏆</div>
+        {% endif %}
+      </div>
+
+      <div class="section-hd"><i class="fas fa-briefcase" style="color:var(--accent);"></i> Aktiv loyihalar</div>
+      {% for vacancy in my_projects %}
+      <a href="{% url 'marketplace:vacancy_detail' vacancy.pk %}" class="order-mini">
+        <div class="order-mini-icon"><i class="fas fa-code"></i></div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:0.9rem;">{{ vacancy.title|truncatechars:45 }}</div>
+          <div style="color:var(--text-muted);font-size:0.8rem;margin-top:0.2rem;">
+            ${{ vacancy.budget }}
+            &nbsp;·&nbsp; Yaratildi: {{ vacancy.created_at|date:"d M" }}
+          </div>
+        </div>
+        <span class="status-badge status-{{ vacancy.status }}">{{ vacancy.get_status_display }}</span>
+      </a>
+      {% empty %}
+      <div style="text-align:center;padding:2rem;color:var(--text-muted);">
+        <i class="fas fa-briefcase" style="opacity:0.3;font-size:1.5rem;"></i>
+        <p style="margin-top:0.5rem;">Aktiv loyiha yo'q</p>
+        <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-outline btn-sm" style="margin-top:0.75rem;">Ish topish</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div>
+      <div class="section-hd"><i class="fas fa-bolt" style="color:var(--gold);"></i> Sizga mos yangi ishlar</div>
+      {% for vacancy in available_vacancies %}
+      <a href="{% url 'marketplace:vacancy_detail' vacancy.pk %}" class="order-mini">
+        <div class="order-mini-icon" style="background:rgba(245,158,11,0.12);color:var(--gold);">
+          <i class="fas fa-star"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:0.9rem;">{{ vacancy.title|truncatechars:45 }}</div>
+          <div style="color:var(--text-muted);font-size:0.8rem;margin-top:0.2rem;">
+            {{ vacancy.get_category_display }}
+          </div>
+        </div>
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--green);font-size:1rem;">
+          ${{ vacancy.budget }}
+        </div>
+      </a>
+      {% empty %}
+      <div style="text-align:center;padding:2rem;color:var(--text-muted);">
+        <p>Ochiq buyurtma yo'q</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% else %}
+  <div class="grid-4" style="margin-bottom:2rem;">
+    <div class="stat-card">
+      <div class="stat-card-icon" style="background:rgba(16,185,129,0.15);color:var(--green);">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-val">{{ my_vacancies|length }}</div>
+      <div class="stat-lbl">Jami buyurtmalar</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon" style="background:rgba(99,102,241,0.15);color:var(--accent);">
+        <i class="fas fa-spinner"></i>
+      </div>
+      <div class="stat-val">{{ active_projects|length }}</div>
+      <div class="stat-lbl">Aktiv loyihalar</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon" style="background:rgba(6,182,212,0.15);color:var(--accent3);">
+        <i class="fas fa-comments"></i>
+      </div>
+      <div class="stat-val">—</div>
+      <div class="stat-lbl">Muzokaralar</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon" style="background:rgba(245,158,11,0.15);color:var(--gold);">
+        <i class="fas fa-dollar-sign"></i>
+      </div>
+      <div class="stat-val">—</div>
+      <div class="stat-lbl">Jami sarflangan</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+    <div class="section-hd"><i class="fas fa-list" style="color:var(--accent);"></i> Mening buyurtmalarim</div>
+    <a href="{% url 'marketplace:vacancy_create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Yangi</a>
+  </div>
+  {% for vacancy in my_vacancies %}
+  <a href="{% url 'marketplace:vacancy_detail' vacancy.pk %}" class="order-mini">
+    <div class="order-mini-icon"><i class="fas fa-file-contract"></i></div>
+    <div style="flex:1;">
+      <div style="font-weight:600;font-size:0.9rem;">{{ vacancy.title|truncatechars:50 }}</div>
+      <div style="color:var(--text-muted);font-size:0.8rem;margin-top:0.2rem;">
+        {{ vacancy.get_category_display }} &nbsp;·&nbsp; {{ vacancy.created_at|date:"d M Y" }}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <span class="status-badge status-{{ vacancy.status }}">{{ vacancy.get_status_display }}</span>
+      <div style="font-family:var(--font-display);font-weight:700;color:var(--green);font-size:0.95rem;margin-top:0.4rem;">
+        ${{ vacancy.budget }}
+      </div>
+    </div>
+  </a>
+  {% empty %}
+  <div style="text-align:center;padding:3rem;color:var(--text-muted);">
+    <i class="fas fa-file-circle-plus" style="font-size:2.5rem;opacity:0.2;"></i>
+    <p style="margin-top:1rem;">Hali buyurtma yo'q</p>
+    <a href="{% url 'marketplace:vacancy_create' %}" class="btn btn-primary" style="margin-top:1rem;">
+      <i class="fas fa-plus"></i> Birinchi buyurtmani yarating
+    </a>
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

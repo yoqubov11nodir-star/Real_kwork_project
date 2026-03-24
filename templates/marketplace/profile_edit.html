@@ -1,0 +1,106 @@
+{% extends "base/base.html" %}
+{% block title %}Profilni tahrirlash — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .edit-page { max-width: 680px; margin: 0 auto; padding: 3rem 0 5rem; }
+  .form-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; }
+  .section-sep { border: none; border-top: 1px solid var(--border); margin: 1.75rem 0 1.25rem; }
+  .sec-title { font-family: var(--font-display); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 1rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="edit-page">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;">
+      <a href="{% url 'marketplace:profile' user.username %}" style="color:var(--text-muted);text-decoration:none;">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <h1 style="font-family:var(--font-display);font-size:1.75rem;font-weight:800;">
+        {% if user.profile.role == 'client' %}Kompaniya ma'lumotlari{% else %}Profilni tahrirlash{% endif %}
+      </h1>
+    </div>
+
+    <div class="form-card">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-error" style="margin-bottom:1.5rem; color: var(--red);">
+          {% for field, errs in form.errors.items %}{% for e in errs %}<div>• {{ e }}</div>{% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="sec-title">{% if user.profile.role == 'client' %}Asosiy ma'lumotlar{% else %}Shaxsiy ma'lumotlar{% endif %}</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ form.first_name.label }}</label>
+            {{ form.first_name }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ form.last_name.label }}</label>
+            {{ form.last_name }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ form.bio.label }}</label>
+          {{ form.bio }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Joylashuv</label>
+          {{ form.location }}
+        </div>
+
+        <hr class="section-sep">
+        <div class="sec-title">{% if user.profile.role == 'client' %}Aloqa va Linklar{% else %}Professional ma'lumotlar{% endif %}</div>
+
+        {% if user.profile.role == 'freelancer' %}
+        <div class="form-group">
+          <label class="form-label">Ko'nikmalar (vergul bilan)</label>
+          {{ form.skills }}
+          <div style="color:var(--text-dim);font-size:0.78rem;margin-top:0.4rem;">
+            Misol: Python, Django, React, PostgreSQL
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="form-row">
+          {% if user.profile.role == 'freelancer' %}
+          <div class="form-group">
+            <label class="form-label">Soatlik narx ($)</label>
+            {{ form.hourly_rate }}
+          </div>
+          {% endif %}
+          <div class="form-group" style="{% if user.profile.role == 'client' %}grid-column: span 2;{% endif %}">
+            <label class="form-label">{{ form.portfolio_url.label }}</label>
+            {{ form.portfolio_url }}
+          </div>
+        </div>
+
+        <hr class="section-sep">
+        <div class="sec-title">{% if user.profile.role == 'client' %}Kompaniya Logotipi{% else %}Avatar{% endif %}</div>
+
+        <div class="form-group">
+          {% if user.profile.avatar %}
+          <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:0.75rem;">
+            <img src="{{ user.profile.avatar.url }}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+            <span style="color:var(--text-muted);font-size:0.85rem;">Joriy rasm</span>
+          </div>
+          {% endif %}
+          {{ form.avatar }}
+        </div>
+
+        <div style="margin-top:2rem;display:flex;gap:1rem;">
+          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;padding:0.85rem;">
+            <i class="fas fa-save"></i> Saqlash
+          </button>
+          <a href="{% url 'marketplace:profile' user.username %}" class="btn btn-ghost">Bekor qilish</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

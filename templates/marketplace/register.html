@@ -1,0 +1,126 @@
+{% extends "base/base.html" %}
+{% block title %}Ro'yxatdan o'tish — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .auth-wrap {
+    min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center;
+    padding: 3rem 1rem;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,0.1) 0%, transparent 70%);
+  }
+  .auth-card {
+    width: 100%; max-width: 500px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 24px; padding: 2.5rem;
+  }
+  .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem; }
+  .role-card {
+    background: var(--bg3); border: 2px solid var(--border);
+    border-radius: 14px; padding: 1.25rem; cursor: pointer;
+    transition: var(--transition); text-align: center; position: relative;
+  }
+  .role-card:hover { border-color: var(--accent); }
+  .role-card input[type="radio"] { position: absolute; opacity: 0; }
+  .role-card.selected { border-color: var(--accent); background: rgba(99,102,241,0.1); }
+  .role-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+  .role-title { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; }
+  .role-desc { color: var(--text-muted); font-size: 0.78rem; margin-top: 0.25rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <span style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;
+        background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+        FreelanceUZ
+      </span>
+    </div>
+    <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;text-align:center;margin-bottom:0.4rem;">
+      Hisob yaratish 🚀
+    </div>
+    <div style="text-align:center;color:var(--text-muted);font-size:0.875rem;margin-bottom:1.75rem;">
+      O'zbekistoning frilanserlar platformasiga xush kelibsiz
+    </div>
+
+    {% if form.errors %}
+    <div class="alert alert-error" style="margin-bottom:1.25rem;">
+      <i class="fas fa-exclamation-circle"></i> Xato ma'lumotlar:
+      {% for field, errs in form.errors.items %}{% for e in errs %}<br>• {{ e }}{% endfor %}{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <!-- ROLE SELECTOR -->
+      <div style="font-family:var(--font-display);font-weight:700;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.75rem;">
+        Men kimman?
+      </div>
+      <div class="role-cards" id="roleCards">
+        <label class="role-card" id="card-freelancer" onclick="selectRole('freelancer')">
+          <input type="radio" name="role" value="freelancer" checked>
+          <div class="role-icon">💻</div>
+          <div class="role-title">Frilanser</div>
+          <div class="role-desc">Ish qilaman, daromad olaman</div>
+        </label>
+        <label class="role-card" id="card-client" onclick="selectRole('client')">
+          <input type="radio" name="role" value="client">
+          <div class="role-icon">🏢</div>
+          <div class="role-title">Mijoz / Kompaniya</div>
+          <div class="role-desc">Ish beraman, mutaxassis topaman</div>
+        </label>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Ism</label>
+          {{ form.first_name }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Familiya</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Foydalanuvchi nomi</label>
+        {{ form.username }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        {{ form.email }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Parol</label>
+          {{ form.password1 }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parolni takrorlang</label>
+          {{ form.password2 }}
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:0.85rem;font-size:1rem;margin-top:0.5rem;">
+        <i class="fas fa-user-plus"></i> Hisob yaratish
+      </button>
+    </form>
+
+    <div style="text-align:center;margin-top:1.5rem;color:var(--text-muted);font-size:0.875rem;">
+      Hisobingiz bormi?
+      <a href="{% url 'auth:login' %}" style="color:var(--accent);text-decoration:none;font-weight:600;">Kirish</a>
+    </div>
+  </div>
+</div>
+<script>
+  function selectRole(role) {
+    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('card-'+role).classList.add('selected');
+  }
+  selectRole('freelancer');
+</script>
+{% endblock %}

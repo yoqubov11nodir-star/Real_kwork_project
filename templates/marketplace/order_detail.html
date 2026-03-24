@@ -1,0 +1,317 @@
+{% extends "base/base.html" %}
+{% block title %}{{ order.title }} — FreelanceUZ{% endblock %}
+{% block extra_css %}
+<style>
+  .detail-hero {
+    padding: 2.5rem 0 0;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(99,102,241,0.04) 0%, transparent 100%);
+  }
+  .detail-body { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; padding: 2rem 0 4rem; }
+  .detail-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+  .sidebar-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.5rem;
+  }
+  .sidebar-card-title {
+    font-family: var(--font-display); font-weight: 700; font-size: 0.95rem;
+    margin-bottom: 1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem;
+  }
+  .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-lbl { color: var(--text-muted); }
+  .info-val { font-weight: 600; }
+  .skill-pill {
+    display: inline-block; margin: 0.2rem;
+    background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);
+    color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 100px; font-size: 0.8rem;
+  }
+  .fl-match-card {
+    display: flex; align-items: center; gap: 0.85rem;
+    padding: 0.85rem; border-radius: 12px; background: var(--bg3);
+    border: 1px solid var(--border); margin-bottom: 0.6rem;
+    text-decoration: none; color: var(--text); transition: var(--transition);
+  }
+  .fl-match-card:hover { border-color: var(--accent); }
+  .fl-match-av {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; color: #fff; overflow: hidden;
+  }
+  .fl-match-av img { width:100%;height:100%;object-fit:cover; }
+  .score-circle {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 0.78rem; font-weight: 800;
+    position: relative;
+  }
+  .match-my-score {
+    background: linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.15));
+    border: 1.5px solid rgba(99,102,241,0.4);
+    border-radius: var(--radius-lg); padding: 1.5rem;
+    display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem;
+  }
+  .big-score {
+    font-family: var(--font-display); font-size: 2.5rem; font-weight: 800; line-height: 1;
+  }
+  .desc-block {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 1.5rem;
+  }
+  .review-mini {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 0.75rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<div class="detail-hero">
+  <div class="container">
+    <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">
+      <a href="{% url 'marketplace:order_list' %}" style="color:var(--text-muted);text-decoration:none;font-size:0.875rem;">
+        <i class="fas fa-arrow-left"></i> Buyurtmalar
+      </a>
+      <span style="color:var(--border);">/</span>
+      <span class="tag">{{ order.get_category_display }}</span>
+      <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+    </div>
+    <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:1rem;">
+      {{ order.title }}
+    </h1>
+    <div style="display:flex;align-items:center;gap:1.5rem;padding-bottom:1.5rem;flex-wrap:wrap;">
+      <a href="{% url 'marketplace:profile' order.client.username %}" style="display:flex;align-items:center;gap:0.6rem;color:var(--text-muted);text-decoration:none;">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;">
+          {{ order.client.first_name|first|upper }}
+        </div>
+        {{ order.client.get_full_name|default:order.client.username }}
+      </a>
+      <span style="color:var(--text-dim);">·</span>
+      <span style="color:var(--text-muted);font-size:0.875rem;">{{ order.created_at|timesince }} oldin</span>
+      {% if order.assigned_freelancer %}
+      <span style="color:var(--text-dim);">·</span>
+      <span style="color:var(--accent3);font-size:0.875rem;">
+        <i class="fas fa-user-check"></i> {{ order.assigned_freelancer.get_full_name|default:order.assigned_freelancer.username }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="detail-body">
+    <!-- LEFT -->
+    <div>
+      <!-- MY MATCH SCORE (Frilanser uchun) -->
+      {% if user_match_score is not None %}
+      <div class="match-my-score">
+        <div>
+          <div class="big-score" style="color:{% if user_match_score >= 70 %}var(--green){% elif user_match_score >= 40 %}var(--orange){% else %}var(--text-muted){% endif %};">
+            {{ user_match_score }}%
+          </div>
+          <div style="color:var(--text-muted);font-size:0.85rem;margin-top:0.25rem;">Sizning moslik darajangiz</div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.4rem;">AI tahlil natijalari:</div>
+          <div class="match-bar" style="height:8px;">
+            <div class="match-bar-fill" style="width:{{ user_match_score }}%;background:{% if user_match_score >= 70 %}var(--green){% elif user_match_score >= 40 %}var(--orange){% else %}var(--text-muted){% endif %};"></div>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.4rem;">
+            Ko'nikmalaringiz va bio matn asosida hisoblandi
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- DESCRIPTION -->
+      <div class="desc-block">
+        <div style="font-family:var(--font-display);font-weight:700;margin-bottom:1rem;font-size:1.05rem;">Loyiha tavsifi</div>
+        <div style="color:var(--text-muted);line-height:1.8;white-space:pre-line;">{{ order.description }}</div>
+      </div>
+
+      <!-- REQUIRED SKILLS -->
+      {% if order.get_required_skills_list %}
+      <div class="desc-block">
+        <div style="font-family:var(--font-display);font-weight:700;margin-bottom:1rem;font-size:1.05rem;">Kerakli ko'nikmalar</div>
+        <div>
+          {% for skill in order.get_required_skills_list %}
+          <span class="skill-pill">{{ skill }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- CLIENT ACTIONS -->
+      {% if user.is_authenticated and user == order.client %}
+      <div class="desc-block" style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <a href="{% url 'marketplace:order_edit' order.pk %}" class="btn btn-ghost">
+          <i class="fas fa-pen"></i> Tahrirlash
+        </a>
+        {% if order.status == 'IN_PROGRESS' %}
+          {% with room=order.chat_rooms.first %}
+          {% if room %}
+          <a href="{% url 'negotiation:complete_order' room.pk %}" class="btn btn-success"
+             onclick="return confirm('Loyihani yakunlanganligini tasdiqlaysizmi?')">
+            <i class="fas fa-check-circle"></i> Yakunlash
+          </a>
+          {% endif %}
+          {% endwith %}
+        {% endif %}
+        <a href="{% url 'marketplace:order_delete' order.pk %}" class="btn btn-danger">
+          <i class="fas fa-trash"></i> O'chirish
+        </a>
+      </div>
+      {% endif %}
+
+      <!-- FREELANCER ACTIONS -->
+      {% if user.is_authenticated and user.profile.role == 'freelancer' and user != order.client %}
+      <div class="desc-block">
+        {% if existing_chatroom %}
+        <a href="{% url 'negotiation:chat_room' existing_chatroom.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;">
+          <i class="fas fa-comments"></i> Chatni davom ettirish
+        </a>
+        {% elif order.status in "OPEN,IN_NEGOTIATION" %}
+        <a href="{% url 'negotiation:create_chat_room' order.pk %}" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.85rem;">
+          <i class="fas fa-handshake"></i> Muzokaralarni boshlash
+        </a>
+        <div style="text-align:center;color:var(--text-muted);font-size:0.8rem;margin-top:0.75rem;">
+          Chat ochiladi, narx va muddatni kelishing, mijoz qabul qilsa boshlanadi
+        </div>
+        {% else %}
+        <div style="text-align:center;color:var(--text-muted);padding:0.5rem;">
+          Bu buyurtma uchun muzokaralar yopilgan
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- NOT LOGGED IN -->
+      {% if not user.is_authenticated %}
+      <div class="desc-block" style="text-align:center;">
+        <p style="color:var(--text-muted);margin-bottom:1rem;">Bu buyurtmaga ariza berish uchun kirish kerak</p>
+        <a href="{% url 'auth:login' %}?next={{ request.path }}" class="btn btn-primary">
+          <i class="fas fa-sign-in-alt"></i> Kirish
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="detail-sidebar">
+      <!-- ORDER INFO -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Loyiha ma'lumotlari</div>
+        <div class="info-row">
+          <span class="info-lbl"><i class="fas fa-dollar-sign"></i> Byudjet</span>
+          <span class="info-val" style="color:var(--green);font-family:var(--font-display);font-size:1.2rem;">
+            ${{ order.initial_budget }}
+          </span>
+        </div>
+        {% if order.final_budget %}
+        <div class="info-row">
+          <span class="info-lbl"><i class="fas fa-handshake"></i> Kelishilgan</span>
+          <span class="info-val" style="color:var(--accent);">${{ order.final_budget }}</span>
+        </div>
+        {% endif %}
+        {% if order.deadline_days %}
+        <div class="info-row">
+          <span class="info-lbl"><i class="fas fa-clock"></i> Muddat</span>
+          <span class="info-val">{{ order.deadline_days }} kun</span>
+        </div>
+        {% endif %}
+        {% if order.agreed_deadline %}
+        <div class="info-row">
+          <span class="info-lbl"><i class="fas fa-calendar-check"></i> Yakunlanish</span>
+          <span class="info-val">{{ order.agreed_deadline|date:"d M Y" }}</span>
+        </div>
+        {% endif %}
+        <div class="info-row">
+          <span class="info-lbl"><i class="fas fa-folder"></i> Kategoriya</span>
+          <span class="info-val">{{ order.get_category_display }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-lbl"><i class="fas fa-circle-dot"></i> Holat</span>
+          <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-lbl"><i class="fas fa-calendar"></i> Joylashgan</span>
+          <span class="info-val">{{ order.created_at|date:"d M Y" }}</span>
+        </div>
+      </div>
+
+      <!-- CLIENT CARD -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">Mijoz haqida</div>
+        <a href="{% url 'marketplace:profile' order.client.username %}" style="display:flex;align-items:center;gap:0.85rem;text-decoration:none;color:var(--text);">
+          <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));
+            display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:#fff;font-size:1.1rem;">
+            {{ order.client.first_name|first|upper }}
+          </div>
+          <div>
+            <div style="font-weight:700;">{{ order.client.get_full_name|default:order.client.username }}</div>
+            <div style="color:var(--text-muted);font-size:0.8rem;">Mijoz</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- TOP FREELANCERS (Mijoz uchun) -->
+      {% if top_freelancers %}
+      <div class="sidebar-card">
+        <div class="sidebar-card-title">
+          <i class="fas fa-brain" style="color:var(--accent);"></i> AI tavsiya — Top frilanserlar
+        </div>
+        {% for item in top_freelancers %}
+        <div style="margin-bottom:0.75rem;">
+          <a href="{% url 'marketplace:profile' item.profile.user.username %}" class="fl-match-card">
+            <div class="fl-match-av">
+              {% if item.profile.avatar %}<img src="{{ item.profile.avatar.url }}">
+              {% else %}{{ item.profile.user.first_name|first|upper }}{% endif %}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600;font-size:0.875rem;">
+                {{ item.profile.user.get_full_name|default:item.profile.user.username }}
+              </div>
+              <div style="font-size:0.75rem;color:var(--text-muted);">
+                <span class="stars">★</span> {{ item.profile.rating }}
+                &nbsp;·&nbsp; {{ item.profile.completed_jobs_count }} ish
+              </div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;
+                color:{% if item.score_percent >= 70 %}var(--green){% elif item.score_percent >= 40 %}var(--orange){% else %}var(--text-muted){% endif %};">
+                {{ item.score_percent }}%
+              </div>
+              <div style="font-size:0.65rem;color:var(--text-dim);">moslik</div>
+            </div>
+          </a>
+          <!-- Frilanserning oldingi sharhlari (qisqa) -->
+          <div style="padding:0 0.5rem;">
+            {% with item.profile.user as fl_user %}
+            {% for review in fl_user.received_reviews.all|slice:":2" %}
+            <div class="review-mini">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+                <span style="color:var(--gold);font-size:0.8rem;">{% for i in "12345" %}{% if forloop.counter <= review.stars %}★{% else %}☆{% endif %}{% endfor %}</span>
+                <span style="color:var(--text-dim);font-size:0.72rem;">{{ review.created_at|date:"d M Y" }}</span>
+              </div>
+              <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.5;">
+                {{ review.comment|truncatechars:80 }}
+              </div>
+            </div>
+            {% empty %}
+            <div style="font-size:0.78rem;color:var(--text-dim);padding:0.25rem 0;">Hali sharh yo'q</div>
+            {% endfor %}
+            {% endwith %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

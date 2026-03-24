@@ -1,0 +1,94 @@
+{% extends "base/base.html" %}
+{% block title %}{% if form.instance.pk %}Tahrirlash{% else %}Yangi vakansiya{% endif %} — FreelanceUZ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-page { max-width: 720px; margin: 0 auto; padding: 3rem 0 5rem; }
+  .form-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; }
+  .form-group { margin-bottom: 1.5rem; }
+  .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="form-page">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;">
+      <a href="javascript:history.back()" style="color:var(--text-muted);text-decoration:none;">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <h1 style="font-family:var(--font-display);font-size:1.75rem;font-weight:800;">
+        {% if form.instance.pk %}Vakansiyani tahrirlash{% else %}Yangi vakansiya yaratish{% endif %}
+      </h1>
+    </div>
+
+    <div class="form-card">
+      <form method="post">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-error" style="margin-bottom:1.5rem; color: var(--red);">
+          {% for field, errs in form.errors.items %}{% for e in errs %}<div>• {{ field.label }}: {{ e }}</div>{% endfor %}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label">{{ form.title.label }}</label>
+          {{ form.title }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ form.description.label }}</label>
+          {{ form.description }}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ form.category.label }}</label>
+            {{ form.category }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ form.deadline_days.label }}</label>
+            {{ form.deadline_days }}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ form.budget_min.label }}</label>
+            {{ form.budget_min }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ form.budget_max.label }}</label>
+            {{ form.budget_max }}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ form.required_workers.label }}</label>
+            {{ form.required_workers }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ form.required_skills.label }}</label>
+            {{ form.required_skills }}
+          </div>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg3); padding: 1rem; border-radius: 8px;">
+          {{ form.is_team_project }}
+          <label class="form-label" style="margin-bottom: 0; cursor: pointer;">{{ form.is_team_project.label }}</label>
+        </div>
+
+        <div style="margin-top:2rem;display:flex;gap:1rem;">
+          <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;padding:0.85rem;">
+            <i class="fas fa-save"></i> Saqlash
+          </button>
+          <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-ghost">Bekor qilish</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
