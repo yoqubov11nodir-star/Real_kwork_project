@@ -37,10 +37,13 @@ class Profile(models.Model):
 
     def update_level(self):
         from django.conf import settings
-        if self.completed_jobs_count >= settings.LEVEL_3_MIN_JOBS:
+        l2_jobs = getattr(settings, 'LEVEL_2_MIN_JOBS', 5)
+        l2_rating = getattr(settings, 'LEVEL_2_MIN_RATING', 4.5)
+        l3_jobs = getattr(settings, 'LEVEL_3_MIN_JOBS', 20)
+
+        if self.completed_jobs_count >= l3_jobs:
             self.level = 3
-        elif (self.completed_jobs_count >= settings.LEVEL_2_MIN_JOBS and
-              self.rating >= settings.LEVEL_2_MIN_RATING):
+        elif self.completed_jobs_count >= l2_jobs and self.rating >= l2_rating:
             self.level = 2
         else:
             self.level = 1
@@ -109,7 +112,6 @@ class Vacancy(models.Model):
         verbose_name = 'Vakansiya'
         verbose_name_plural = 'Vakansiyalar'
 
-# Application va Project modellarini o'zgartirmasdan saqlab qolamiz...
 class Application(models.Model):
     vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, related_name='applications')
     worker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
@@ -133,3 +135,22 @@ class Project(models.Model):
     deadline = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=[('IN_PROGRESS', 'Jarayonda'), ('COMPLETED', 'Yakunlandi'), ('DELAYED', 'Kechikdi'), ('CANCELLED', 'Bekor')], default='IN_PROGRESS')
     created_at = models.DateTimeField(auto_now_add=True)
+
+@receiver(post_save, sender=Project)
+def update_worker_stats(sender, instance, created, **kwargs):
+    if instance.status == 'COMPLETED':
+        if instance.pm:
+            pm_profile = instance.pm.profile
+            pm_profile.completed_jobs_count = Project.objects.filter(
+                models.Q(pm=instance.pm) | models.Q(workers=instance.pm), 
+                status='COMPLETED'
+            ).distinct().count()
+            pm_profile.save()
+            pm_profile.update_level()
+        
+        for worker in instance.workers.all():
+            profile = worker.profile
+            count = Project.objects.filter(workers=worker, status='COMPLETED').count()
+            profile.completed_jobs_count = count
+            profile.save()
+            profile.update_level()

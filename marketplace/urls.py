@@ -15,6 +15,8 @@ urlpatterns = [
     path('vacancies/<int:pk>/close/', views.vacancy_close_view, name='vacancy_close'),
     path('vacancies/<int:pk>/delete/', views.vacancy_delete_view, name='vacancy_delete'),
 
+    path('order/create/<str:username>/', views.order_create_view, name='order_create'),
+
     # Profil (TARTIB MUHIM!)
     path('profile/edit/', views.profile_edit_view, name='profile_edit'), 
     path('profile/<str:username>/', views.profile_view, name='profile'),

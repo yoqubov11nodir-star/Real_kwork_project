@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 
+from reputation.models import Review 
 from .models import (
     NegotiationRoom, NegotiationMessage,
     Offer, ProjectChat, Message
@@ -236,30 +237,29 @@ def assign_pm(request, project_pk):
 
 @login_required
 def project_detail(request, pk):
-    """Loyiha sahifasi — chatlar, workerlar, PM"""
+    """Loyiha sahifasi — chatlar, workerlar, PM va baholash holati"""
     project = get_object_or_404(Project, pk=pk)
     user = request.user
 
     # Ruxsat tekshirish
     is_company = user == project.company
     is_pm = user == project.pm
-    is_worker = user in project.workers.all()
+    is_worker = project.workers.filter(id=user.id).exists()
 
     if not (is_company or is_pm or is_worker):
         messages.error(request, 'Ruxsat yo\'q')
         return redirect('marketplace:vacancy_list')
 
-    # Chatlarni olish
-    company_pm_chat = None
-    pm_workers_chat = None
+    # --- BAHOLANGANLARNI ANIQLASH ---
+    # Joriy foydalanuvchi ushbu loyihada kimlarga baho berganini olamiz
+    rated_users_ids = Review.objects.filter(
+        project=project,
+        reviewer=user
+    ).values_list('freelancer_id', flat=True)
 
-    if project.pm:
-        company_pm_chat = ProjectChat.objects.filter(
-            project=project, chat_type='company_pm'
-        ).first()
-        pm_workers_chat = ProjectChat.objects.filter(
-            project=project, chat_type='pm_workers'
-        ).first()
+    # Chatlarni olish
+    company_pm_chat = project.chats.filter(chat_type='company_pm').first()
+    pm_workers_chat = project.chats.filter(chat_type='pm_workers').first()
 
     return render(request, 'negotiation/project_detail.html', {
         'project': project,
@@ -268,6 +268,7 @@ def project_detail(request, pk):
         'is_worker': is_worker,
         'company_pm_chat': company_pm_chat,
         'pm_workers_chat': pm_workers_chat,
+        'rated_users_ids': rated_users_ids,  # Shablonda tekshirish uchun
     })
 
 

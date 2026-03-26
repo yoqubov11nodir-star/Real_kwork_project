@@ -1,0 +1,36 @@
+{% extends 'base/base.html' %}
+{% block title %}Vakansiyani yopish - {{ vacancy.title }}{% endblock %}
+
+{% block content %}
+<div class="container page-content">
+    <div style="max-width: 600px; margin: 0 auto;">
+        <div class="card shadow-lg" style="border-top: 4px solid var(--orange);">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-lock text-orange" style="font-size: 3rem;"></i>
+                </div>
+                <h2 class="section-title">Vakansiyani yopish</h2>
+                <p class="section-subtitle">
+                    Siz haqiqatan ham <strong>"{{ vacancy.title }}"</strong> vakansiyasini yopmoqchimisiz?
+                </p>
+                
+                <div class="alert alert-info text-start mb-4">
+                    <i class="fas fa-info-circle"></i> Vakansiya yopilgandan so'ng, frilanserlar unga ariza topshira olmaydilar.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <a href="{% url 'marketplace:vacancy_detail' vacancy.pk %}" class="btn btn-ghost">
+                            Bekor qilish
+                        </a>
+                        <button type="submit" class="btn btn-primary" style="background: var(--orange);">
+                            Ha, yopilsin
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

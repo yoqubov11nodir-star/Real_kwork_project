@@ -9,12 +9,14 @@ from .forms import VacancyForm, ProfileForm, RegisterForm
 from .ai_matching import get_top_workers_for_vacancy, calculate_match_score
 
 def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('marketplace:dashboard')
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, f"Xush kelibsiz, {user.first_name}!")
+            messages.success(request, f"Xush kelibsiz, {user.first_name}! Tizimda sizning username: {user.username}")
             return redirect('marketplace:dashboard')
     else:
         form = RegisterForm()
@@ -23,20 +25,30 @@ def register_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('marketplace:dashboard')
+    
     if request.method == 'POST':
-        username = request.POST.get('username')
+        username_or_email = request.POST.get('username')
         password = request.POST.get('password')
-        if '@' in username:
+        
+        # 1. Email yoki Username ekanini aniqlash
+        if '@' in username_or_email:
             try:
-                user_obj = User.objects.get(email=username)
+                user_obj = User.objects.get(email=username_or_email)
                 username = user_obj.username
             except User.DoesNotExist:
-                pass
-        user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            return redirect(request.GET.get('next', 'marketplace:dashboard'))
-        messages.error(request, "Email yoki parol noto'g'ri")
+                username = None
+        else:
+            username = username_or_email
+
+        # 2. Authenticate qilish
+        if username:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect(request.GET.get('next', 'marketplace:dashboard'))
+        
+        messages.error(request, "Email/Username yoki parol noto'g'ri")
+        
     return render(request, 'marketplace/login.html')
 
 def logout_view(request):
@@ -58,7 +70,6 @@ def dashboard_view(request):
     else:
         context['available_vacancies'] = Vacancy.objects.filter(status='OPEN').order_by('-created_at')[:5]
         context['my_projects'] = request.user.worker_projects.filter(status='IN_PROGRESS')[:5]
-        # Negotiation tekshiruvi
         if hasattr(request.user, 'worker_negotiations'):
             context['my_negotiations'] = request.user.worker_negotiations.filter(status='active').select_related('vacancy')[:5]
     return render(request, 'marketplace/dashboard.html', context)
@@ -169,19 +180,19 @@ def profile_edit_view(request):
     profile = request.user.profile
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
-        # XATO SHU YERDA EDI: .valid() emas, .is_valid() bo'lishi kerak
         if form.is_valid(): 
-            # Profil ma'lumotlarini saqlaymiz
             form.save()
-            
-            # User modeliga tegishli maydonlarni yangilaymiz
             user = request.user
             user.first_name = form.cleaned_data.get('first_name')
             user.last_name = form.cleaned_data.get('last_name')
             user.save()
-            
+            messages.success(request, 'Profil muvaffaqiyatli yangilandi!')
             return redirect('marketplace:profile', username=user.username)
     else:
         form = ProfileForm(instance=profile)
-    
     return render(request, 'marketplace/profile_edit.html', {'form': form})
+
+@login_required
+def order_create_view(request, username):
+    messages.info(request, "Buyurtma berish tizimi tez kunda ishga tushadi.")
+    return redirect('marketplace:profile', username=username)

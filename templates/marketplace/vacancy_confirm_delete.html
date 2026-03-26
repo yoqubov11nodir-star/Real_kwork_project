@@ -1,0 +1,22 @@
+{% extends 'base/base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <h2 class="text-danger mb-4">Vakansiyani o'chirish</h2>
+                    <p>Siz haqiqatan ham <strong>"{{ vacancy.title }}"</strong> vakansiyasini o'chirib tashlamoqchimisiz?</p>
+                    <p class="text-muted small">Bu amalni ortga qaytarib bo'lmaydi.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger px-4">Ha, o'chirilsin</button>
+                        <a href="{% url 'marketplace:vacancy_detail' vacancy.pk %}" class="btn btn-secondary px-4">Bekor qilish</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

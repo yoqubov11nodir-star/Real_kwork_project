@@ -16,11 +16,12 @@
     {% if p.status == 'IN_PROGRESS' %}border-left:3px solid var(--accent);{% endif %}
     {% if p.status == 'COMPLETED' %}border-left:3px solid var(--green);{% endif %}">
 
-    <!-- HEADER -->
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1.25rem;">
       <div>
         <div style="font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin-bottom:.3rem;">
-          {{ p.vacancy.title }}
+          <a href="{% url 'negotiation:project_detail' p.pk %}" style="text-decoration:none; color:inherit;">
+             {{ p.vacancy.title }}
+          </a>
         </div>
         <div style="font-size:.82rem;color:var(--text-muted);">
           {% if is_company %}
@@ -39,7 +40,6 @@
       <span class="status-badge status-{{ p.status }}">{{ p.get_status_display }}</span>
     </div>
 
-    <!-- WORKERLAR -->
     <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
       {% for w in p.workers.all %}
       <a href="{% url 'marketplace:profile' w.username %}"
@@ -61,14 +61,12 @@
       {% endfor %}
     </div>
 
-    <!-- CHATLAR -->
     <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
       {% if item.company_pm_chat %}
         {% if is_company or p.pm == user %}
         <a href="{% url 'negotiation:project_chat' item.company_pm_chat.pk %}"
            class="btn btn-ghost btn-sm">
-          <i class="fas fa-building"></i>
-          Kompaniya ↔ PM chat
+          <i class="fas fa-building"></i> Kompaniya ↔ PM chat
         </a>
         {% endif %}
       {% endif %}
@@ -77,20 +75,17 @@
         {% if p.pm == user or user in p.workers.all %}
         <a href="{% url 'negotiation:project_chat' item.pm_workers_chat.pk %}"
            class="btn btn-ghost btn-sm">
-          <i class="fas fa-users"></i>
-          PM ↔ Workers chat
+          <i class="fas fa-users"></i> PM ↔ Workers chat
         </a>
         {% endif %}
       {% endif %}
 
-      <!-- PM TAYINLASH (kompaniya uchun, PM yo'q bo'lsa) -->
       {% if is_company and not p.pm and p.workers.exists %}
-      <button onclick="showPmModal({{ p.pk }})" class="btn btn-primary btn-sm">
+      <a href="{% url 'negotiation:project_detail' p.pk %}" class="btn btn-primary btn-sm">
         <i class="fas fa-crown"></i> PM tayinlash
-      </button>
+      </a>
       {% endif %}
 
-      <!-- YAKUNLASH -->
       {% if is_company and p.status == 'IN_PROGRESS' %}
       <form method="post" action="{% url 'negotiation:complete_project' p.pk %}"
             style="display:inline;">
@@ -108,53 +103,7 @@
   <div style="text-align:center;padding:4rem;color:var(--text-muted);">
     <i class="fas fa-folder-open" style="font-size:3rem;opacity:.2;display:block;margin-bottom:1rem;"></i>
     <h3>Hali loyiha yo'q</h3>
-    {% if is_company %}
-    <a href="{% url 'marketplace:vacancy_create' %}" class="btn btn-primary" style="margin-top:1rem;">
-      Vakansiya yaratish
-    </a>
-    {% else %}
-    <a href="{% url 'marketplace:vacancy_list' %}" class="btn btn-primary" style="margin-top:1rem;">
-      Vakansiyalarni ko'rish
-    </a>
-    {% endif %}
   </div>
   {% endfor %}
 </div>
-
-<!-- PM MODAL -->
-<div id="pmModal" style="display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.7);z-index:9999;
-  display:none;align-items:center;justify-content:center;">
-  <div style="background:var(--bg2);border:1px solid var(--border);
-    border-radius:var(--radius-lg);padding:2rem;max-width:400px;width:90%;">
-    <h3 style="font-family:var(--font-display);font-weight:700;margin-bottom:1rem;">
-      PM Tayinlash
-    </h3>
-    <form id="pmForm" method="post" action="">
-      {% csrf_token %}
-      <select name="pm_id" class="form-select" style="margin-bottom:1rem;">
-        <option value="">Worker tanlang...</option>
-      </select>
-      <div style="display:flex;gap:1rem;">
-        <button type="button" onclick="closePmModal()" class="btn btn-ghost" style="flex:1;">
-          Bekor
-        </button>
-        <button type="submit" class="btn btn-primary" style="flex:1;">
-          <i class="fas fa-crown"></i> Tayinlash
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-// PM modal (oddiy versiya — to'liq AJAX qo'shish mumkin)
-function showPmModal(projectId) {
-  // Sahifani reload qilib PM form sahifasiga o'tish
-  window.location.href = `/negotiation/project/${projectId}/`;
-}
-function closePmModal() {
-  document.getElementById('pmModal').style.display = 'none';
-}
-</script>
 {% endblock %}

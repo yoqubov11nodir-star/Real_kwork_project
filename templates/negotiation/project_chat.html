@@ -1,0 +1,98 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Chat: {{ chat.project.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="height: 88vh; display: flex; flex-direction: column; max-width: 900px;">
+    
+    <div class="d-flex align-items-center mb-3 px-2">
+        <a href="{% url 'negotiation:project_detail' project.pk %}" class="text-white me-3 text-decoration-none">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h5 class="text-white mb-0" style="font-weight: 600;">{{ chat.project.title }}</h5>
+    </div>
+
+    <div id="chat-window" class="flex-grow-1 p-3 shadow-lg" style="overflow-y: auto; background: #0e1621; border-radius: 15px; border: 1px solid #242f3d;">
+        {% for message in chat_messages %}
+            {% with prev_message=chat_messages|dictsort:"created_at"|slice:forloop.counter0|last %}
+            <div class="d-flex {% if message.sender == request.user %}justify-content-end{% else %}justify-content-start{% endif %} 
+                        {% if message.sender != prev_message.sender or forloop.first %}mt-4{% else %}mt-1{% endif %}">
+                
+                <div class="message-bubble" 
+                     style="max-width: 75%; padding: 8px 14px; border-radius: 12px;
+                            background: {% if message.sender == request.user %}#2b5278{% else %}#182533{% endif %}; 
+                            color: white; border: 1px solid rgba(255,255,255,0.05);">
+                    
+                    {% if message.sender != request.user %}
+                        {% if message.sender != prev_message.sender or forloop.first %}
+                            <div style="color: #40a7e3; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px;">
+                                {{ message.sender.username }}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <div style="font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; display: flex; flex-direction: column;">
+                        {{ message.content }}
+                        <span style="font-size: 0.6rem; color: #a2b5c7; align-self: flex-end; margin-top: 4px;">
+                            {{ message.created_at|date:"H:i" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+        {% endfor %}
+        <div id="scroll-anchor"></div>
+    </div>
+
+    <div class="py-3 mt-auto">
+        <form action="{% url 'negotiation:send_project_message' chat.pk %}" method="post" id="chat-form">
+            {% csrf_token %}
+            <div style="display: flex; align-items: center; background: #17212b; border-radius: 12px; border: 1px solid #242f3d; padding: 5px 10px;">
+                
+                <input type="text" name="content" id="message-input" 
+                       placeholder="Xabar yozing..." 
+                       required 
+                       style="flex-grow: 1; background: transparent; border: none; color: white; outline: none; padding: 10px; font-size: 0.95rem;">
+                
+                <button type="submit" 
+                        style="background: #2b5278; border: none; color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Skrollni chiroyli qilish */
+    #chat-window::-webkit-scrollbar { width: 5px; }
+    #chat-window::-webkit-scrollbar-thumb { background: #242f3d; border-radius: 10px; }
+    
+    /* Tugma ustiga borganda effekt */
+    button[type="submit"]:hover {
+        background: #36618d !important;
+        transform: scale(1.05);
+    }
+</style>
+
+<script>
+    const chatWindow = document.getElementById('chat-window');
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    document.getElementById('chat-form').onsubmit = function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); 
+            }
+        });
+    };
+</script>
+{% endblock %}

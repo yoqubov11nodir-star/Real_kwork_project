@@ -8,24 +8,21 @@ from .models import Review, Badge, award_badges
 from .forms import ReviewForm
 from marketplace.models import Project
 
+def create_review_project(request, project_pk, user_pk): # user_pk qo'shildi
+    project = get_object_or_404(Project, pk=project_pk)
+    # Aynan biz tanlagan ishchini bazadan olamiz
+    freelancer = get_object_or_404(User, pk=user_pk)
 
-@login_required
-def create_review_project(request, project_pk):
-    project = get_object_or_404(
-        Project, pk=project_pk,
-        company=request.user,
-        status='COMPLETED'
-    )
-
-    if hasattr(project, 'review'):
-        messages.info(request, 'Bu loyiha allaqachon baholangan.')
-        return redirect('negotiation:project_detail', pk=project_pk)
-
-    # PM ga baho berish
-    freelancer = project.pm or project.workers.first()
-    if not freelancer:
-        messages.error(request, 'Baho berish uchun worker topilmadi')
-        return redirect('negotiation:project_detail', pk=project_pk)
+    # Tekshiruv: Aynan shu loyihada shu odamga baho berganmisiz?
+    already_reviewed = Review.objects.filter(
+        project=project, 
+        reviewer=request.user, 
+        freelancer=freelancer
+    ).exists()
+    
+    if already_reviewed:
+        messages.warning(request, f"Siz {freelancer.get_full_name()}ga allaqachon baho bergansiz!")
+        return redirect('negotiation:project_detail', pk=project.pk)
 
     if request.method == 'POST':
         form = ReviewForm(request.POST)
@@ -34,22 +31,21 @@ def create_review_project(request, project_pk):
             review.project = project
             review.reviewer = request.user
             review.freelancer = freelancer
-            review.save()
-            awarded = award_badges(freelancer)
-            messages.success(request, 'Bahoyingiz uchun rahmat!')
-            return redirect(
-                'marketplace:profile',
-                username=freelancer.username
-            )
+            
+            try:
+                review.save()
+                messages.success(request, f"{freelancer.get_full_name()} muvaffaqiyatli baholandi!")
+                return redirect('negotiation:project_detail', pk=project.pk)
+            except Exception as e:
+                messages.error(request, f"Xatolik: {e}")
     else:
         form = ReviewForm()
-
+    
     return render(request, 'reputation/create_review.html', {
         'form': form,
         'project': project,
-        'freelancer': freelancer,
+        'freelancer': freelancer
     })
-
 
 def leaderboard_view(request):
     from marketplace.models import Profile
