@@ -101,8 +101,23 @@ class Vacancy(models.Model):
         return []
 
     @property
+    def applications_count(self):
+        """Vakansiyaga kelib tushgan jami arizalar soni (muzokaralar xonasi orqali)"""
+        return self.negotiation_rooms.count()
+
+    @property
     def hired_count(self):
-        return self.projects.filter(status__in=['IN_PROGRESS', 'COMPLETED']).count()
+        """
+        Loyiha ichidagi barcha workerlarni sanaydi. 
+        Distinct() ishlatildi, chunki bitta worker xato tufayli ikki marta qo'shilgan bo'lsa ham bir marta sanaladi.
+        """
+        from django.db.models import Count
+        # Ushbu vakansiyaga tegishli proyektlardagi barcha workerlarni sanash
+        result = self.projects.filter(
+            status__in=['IN_PROGRESS', 'COMPLETED']
+        ).aggregate(total_workers=models.Count('workers', distinct=True))
+        
+        return result['total_workers'] or 0
 
     def is_full(self):
         return self.hired_count >= self.required_workers

@@ -154,19 +154,28 @@ def accept_offer(request, offer_pk):
 
     return JsonResponse({'success': True, 'project_id': project.pk})
 
-
 @login_required
 @require_POST
 def reject_offer(request, offer_pk):
+    # Taklifni olish (faqat shu vakansiya egasi rad eta oladi)
     offer = get_object_or_404(Offer, pk=offer_pk, room__company=request.user)
+    
+    # Taklifning o'zini rad etish
     offer.reject()
 
+    # MUHIM: Muzokaralar xonasi statusini ham rad etilgan holatga o'tkazamiz
+    # Shunda frontendda "Arizangiz rad etildi" degan yozuv chiqadi
+    offer.room.status = 'rejected'
+    offer.room.save()
+
+    # Tizimli xabar yaratish
     NegotiationMessage.objects.create(
         room=offer.room,
         sender=request.user,
         content="❌ Taklif rad etildi",
         message_type='system'
     )
+    
     return JsonResponse({'success': True})
 
 
@@ -377,10 +386,18 @@ def complete_project(request, pk):
 
         # Workerlar statistikasini yangilash
         for worker in project.workers.all():
+            # Profil ob'ekti mavjudligiga ishonch hosil qiling
             worker.profile.completed_jobs_count += 1
+            worker.profile.save() # O'zgarishlarni saqlashni unutmang
             worker.profile.update_level()
 
         messages.success(request, 'Loyiha yakunlandi!')
-        return redirect('reputation:create_review_project', project_pk=pk)
+        
+        # XATOLIK SHU YERDA EDI: user_pk argumentini qo'shish kerak
+        if project.pm:
+            return redirect('reputation:create_review_project', project_pk=project.pk, user_pk=project.pm.pk)
+        
+        # Agar PM bo'lmasa, loyiha sahifasiga qaytarish
+        return redirect('negotiation:project_detail', pk=project.pk)
 
     return redirect('negotiation:project_detail', pk=pk)

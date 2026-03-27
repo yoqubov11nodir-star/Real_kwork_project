@@ -94,7 +94,6 @@
 
 <div class="container">
   <div class="detail-body">
-    <!-- LEFT -->
     <div>
       {% if user_match_score is not None %}
       <div class="match-score-bar">
@@ -120,7 +119,6 @@
       </div>
       {% endif %}
 
-      <!-- TAVSIF -->
       <div style="background:var(--bg2);border:1px solid var(--border);
         border-radius:var(--radius-lg);padding:2rem;margin-bottom:1.5rem;">
         <div style="font-family:var(--font-display);font-weight:700;
@@ -132,7 +130,6 @@
         </div>
       </div>
 
-      <!-- SKILLS -->
       {% if vacancy.get_skills_list %}
       <div style="background:var(--bg2);border:1px solid var(--border);
         border-radius:var(--radius-lg);padding:1.75rem;margin-bottom:1.5rem;">
@@ -146,7 +143,6 @@
       </div>
       {% endif %}
 
-      <!-- KOMPANIYA AMALLAR -->
       {% if user.is_authenticated and user == vacancy.company %}
       <div style="background:var(--bg2);border:1px solid var(--border);
         border-radius:var(--radius-lg);padding:1.5rem;
@@ -181,7 +177,6 @@
       </div>
       {% endif %}
 
-      <!-- WORKER AMALLAR -->
       {% if user.is_authenticated and user.profile.role == 'freelancer' and user != vacancy.company %}
       <div style="background:var(--bg2);border:1px solid var(--border);
         border-radius:var(--radius-lg);padding:1.75rem;">
@@ -195,9 +190,13 @@
           <div style="text-align:center;color:var(--green);font-weight:600;">
             <i class="fas fa-check-circle"></i> Siz bu loyihaga qabul qilindingiz!
           </div>
+          {% elif user_negotiation.status == 'rejected' %}
+          <div style="text-align:center;color:var(--red);font-weight:600;">
+            <i class="fas fa-times-circle"></i> Arizangiz rad etildi
+          </div>
           {% else %}
-          <div style="text-align:center;color:var(--text-muted);">
-            Arizangiz ko'rib chiqildi
+          <div style="text-align:center;color:var(--accent3);font-weight:600;">
+            <i class="fas fa-hourglass-half"></i> Arizangiz ko'rib chiqilmoqda
           </div>
           {% endif %}
         {% elif vacancy.status == 'OPEN' %}
@@ -230,9 +229,7 @@
       {% endif %}
     </div>
 
-    <!-- SIDEBAR -->
     <div>
-      <!-- VAKANSIYA INFO -->
       <div class="sidebar-card">
         <div class="sidebar-card-title">Vakansiya ma'lumotlari</div>
         <div class="info-row">
@@ -263,7 +260,6 @@
         </div>
       </div>
 
-      <!-- TOP WORKERS (kompaniya uchun) -->
       {% if top_workers %}
       <div class="sidebar-card">
         <div class="sidebar-card-title">
@@ -300,7 +296,6 @@
       </div>
       {% endif %}
 
-      <!-- KOMPANIYA -->
       <div class="sidebar-card">
         <div class="sidebar-card-title">Kompaniya</div>
         <a href="{% url 'marketplace:profile' vacancy.company.username %}"
