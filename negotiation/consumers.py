@@ -2,7 +2,6 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import User
-# Yangi modellarni import qildik
 from .models import ProjectChat, NegotiationRoom, Message
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -16,20 +15,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        # Foydalanuvchi ruxsatini tekshirish
         has_access = await self.check_room_access()
         if not has_access:
             await self.close()
             return
 
-        # Guruhga qo'shilish
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
         await self.accept()
 
-        # Online bo'lganini bildirish
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -63,10 +59,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if not content:
                 return
 
-            # Xabarni saqlash
             message = await self.save_message(content, 'TEXT')
 
-            # Guruhga yuborish
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
@@ -127,19 +121,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def check_room_access(self):
         try:
-            # ChatRoom o'rniga NegotiationRoom ishlatildi
             room = NegotiationRoom.objects.get(pk=self.room_pk)
-            # Modelingizga qarab buyer va seller tekshiriladi
             return self.user in [room.buyer, room.seller]
         except NegotiationRoom.DoesNotExist:
             return False
 
     @database_sync_to_async
     def save_message(self, content, message_type='TEXT'):
-        # ChatRoom o'rniga NegotiationRoom ishlatildi
         room = NegotiationRoom.objects.get(pk=self.room_pk)
         return Message.objects.create(
-            chat=room, # Modelingizda 'room' emas, 'chat' deb nomlangan edi
+            chat=room, 
             sender=self.user,
             content=content,
             message_type=message_type

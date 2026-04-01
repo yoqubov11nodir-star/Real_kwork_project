@@ -8,12 +8,10 @@ from .models import Review, Badge, award_badges
 from .forms import ReviewForm
 from marketplace.models import Project
 
-def create_review_project(request, project_pk, user_pk): # user_pk qo'shildi
+def create_review_project(request, project_pk, user_pk):
     project = get_object_or_404(Project, pk=project_pk)
-    # Aynan biz tanlagan ishchini bazadan olamiz
     freelancer = get_object_or_404(User, pk=user_pk)
 
-    # Tekshiruv: Aynan shu loyihada shu odamga baho berganmisiz?
     already_reviewed = Review.objects.filter(
         project=project, 
         reviewer=request.user, 

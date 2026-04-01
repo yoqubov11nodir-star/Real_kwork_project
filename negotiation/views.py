@@ -12,9 +12,6 @@ from .models import (
 )
 from marketplace.models import Vacancy, Project
 
-
-# ── VAKANSIYA UCHUN MUZOKARALAR ────────────────────────────
-
 @login_required
 def start_negotiation(request, vacancy_pk):
     """Worker vakansiyaga ariza beradi va muzokaralar boshlanadi"""
@@ -32,7 +29,6 @@ def start_negotiation(request, vacancy_pk):
         messages.error(request, 'Faqat workerlar ariza bera oladi')
         return redirect('marketplace:vacancy_detail', pk=vacancy_pk)
 
-    # Mavjud xonani tekshirish
     room, created = NegotiationRoom.objects.get_or_create(
         vacancy=vacancy,
         worker=request.user,
@@ -114,7 +110,6 @@ def send_offer(request, room_pk):
     if not budget or not days:
         return JsonResponse({'error': 'Narx va muddat kerak'}, status=400)
 
-    # Oldingi pending offerlarni bekor qilish
     room.offers.filter(status='pending').update(status='rejected')
 
     offer = Offer.objects.create(
@@ -157,18 +152,13 @@ def accept_offer(request, offer_pk):
 @login_required
 @require_POST
 def reject_offer(request, offer_pk):
-    # Taklifni olish (faqat shu vakansiya egasi rad eta oladi)
     offer = get_object_or_404(Offer, pk=offer_pk, room__company=request.user)
     
-    # Taklifning o'zini rad etish
     offer.reject()
 
-    # MUHIM: Muzokaralar xonasi statusini ham rad etilgan holatga o'tkazamiz
-    # Shunda frontendda "Arizangiz rad etildi" degan yozuv chiqadi
     offer.room.status = 'rejected'
     offer.room.save()
 
-    # Tizimli xabar yaratish
     NegotiationMessage.objects.create(
         room=offer.room,
         sender=request.user,
@@ -177,9 +167,6 @@ def reject_offer(request, offer_pk):
     )
     
     return JsonResponse({'success': True})
-
-
-# ── KOMPANIYA: WORKER QABUL QILISH ────────────────────────
 
 @login_required
 def vacancy_applications(request, vacancy_pk):
@@ -194,9 +181,6 @@ def vacancy_applications(request, vacancy_pk):
         'rooms': rooms,
     })
 
-
-# ── LOYIHA CHATLARI ────────────────────────────────────────
-
 @login_required
 def assign_pm(request, project_pk):
     """Kompaniya PM tayinlaydi — avtomatik 2 ta chat yaratiladi"""
@@ -206,7 +190,6 @@ def assign_pm(request, project_pk):
         pm_id = request.POST.get('pm_id')
         pm = get_object_or_404(User, pk=pm_id)
 
-        # PM loyiha workerlaridan biri bo'lishi kerak
         if pm not in project.workers.all():
             messages.error(request, 'PM loyiha workeri bo\'lishi kerak')
             return redirect('negotiation:project_detail', pk=project_pk)
@@ -214,7 +197,6 @@ def assign_pm(request, project_pk):
         project.pm = pm
         project.save()
 
-        # 2 ta chat yaratish
         company_pm_chat, _ = ProjectChat.objects.get_or_create(
             project=project,
             chat_type='company_pm'
@@ -224,7 +206,6 @@ def assign_pm(request, project_pk):
             chat_type='pm_workers'
         )
 
-        # Tizim xabarlari
         Message.objects.create(
             chat=company_pm_chat,
             sender=request.user,
@@ -250,7 +231,6 @@ def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk)
     user = request.user
 
-    # Ruxsat tekshirish
     is_company = user == project.company
     is_pm = user == project.pm
     is_worker = project.workers.filter(id=user.id).exists()
@@ -259,14 +239,11 @@ def project_detail(request, pk):
         messages.error(request, 'Ruxsat yo\'q')
         return redirect('marketplace:vacancy_list')
 
-    # --- BAHOLANGANLARNI ANIQLASH ---
-    # Joriy foydalanuvchi ushbu loyihada kimlarga baho berganini olamiz
     rated_users_ids = Review.objects.filter(
         project=project,
         reviewer=user
     ).values_list('freelancer_id', flat=True)
 
-    # Chatlarni olish
     company_pm_chat = project.chats.filter(chat_type='company_pm').first()
     pm_workers_chat = project.chats.filter(chat_type='pm_workers').first()
 
@@ -277,7 +254,7 @@ def project_detail(request, pk):
         'is_worker': is_worker,
         'company_pm_chat': company_pm_chat,
         'pm_workers_chat': pm_workers_chat,
-        'rated_users_ids': rated_users_ids,  # Shablonda tekshirish uchun
+        'rated_users_ids': rated_users_ids,
     })
 
 
@@ -292,7 +269,6 @@ def project_chat(request, chat_pk):
 
     chat_messages = chat.messages.select_related('sender').order_by('created_at')
 
-    # O'qilmagan xabarlarni belgilash
     chat.messages.filter(is_read=False).exclude(
         sender=request.user
     ).update(is_read=True)
@@ -310,7 +286,6 @@ def project_chat(request, chat_pk):
         'is_pm': is_pm,
         'is_worker': is_worker,
     })
-
 
 @login_required
 @require_POST
@@ -384,20 +359,16 @@ def complete_project(request, pk):
         project.vacancy.status = 'COMPLETED'
         project.vacancy.save()
 
-        # Workerlar statistikasini yangilash
         for worker in project.workers.all():
-            # Profil ob'ekti mavjudligiga ishonch hosil qiling
             worker.profile.completed_jobs_count += 1
-            worker.profile.save() # O'zgarishlarni saqlashni unutmang
+            worker.profile.save() 
             worker.profile.update_level()
 
         messages.success(request, 'Loyiha yakunlandi!')
         
-        # XATOLIK SHU YERDA EDI: user_pk argumentini qo'shish kerak
         if project.pm:
             return redirect('reputation:create_review_project', project_pk=project.pk, user_pk=project.pm.pk)
         
-        # Agar PM bo'lmasa, loyiha sahifasiga qaytarish
         return redirect('negotiation:project_detail', pk=project.pk)
 
     return redirect('negotiation:project_detail', pk=pk)

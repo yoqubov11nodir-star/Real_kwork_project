@@ -20,7 +20,6 @@ def check_order_deadline(order_pk):
                 order.status = 'DELAYED'
                 order.save()
 
-                # Freelancer va mijozga bildirishnoma (email yoki in-app)
                 _notify_delay(order)
 
                 return f"Order {order_pk} marked as DELAYED."

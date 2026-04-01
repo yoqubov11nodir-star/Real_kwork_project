@@ -65,7 +65,6 @@ DATABASES = {
     }
 }
 
-# Redis & Channels
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -75,7 +74,6 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Celery
 CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
 CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 CELERY_TIMEZONE = 'Asia/Tashkent'
@@ -119,10 +117,8 @@ REST_FRAMEWORK = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# OpenAI (agar ishlatilsa)
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
-# Leveling tizimi
 LEVEL_2_MIN_JOBS = 5
 LEVEL_2_MIN_RATING = 4.5
 LEVEL_3_MIN_JOBS = 20

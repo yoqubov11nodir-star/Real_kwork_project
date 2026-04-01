@@ -4,11 +4,6 @@ from marketplace.models import Vacancy, Project
 
 
 class ProjectChat(models.Model):
-    """
-    Har bir loyihada 2 ta chat bo'ladi:
-    1. company_pm  — Kompaniya ↔ PM
-    2. pm_workers  — PM ↔ Workerlar
-    """
     CHAT_TYPE_CHOICES = [
         ('company_pm', 'Kompaniya — PM'),
         ('pm_workers', 'PM — Workerlar'),
@@ -35,7 +30,7 @@ class ProjectChat(models.Model):
             if project.pm:
                 users.append(project.pm)
             return users
-        else:  # pm_workers
+        else:  
             users = []
             if project.pm:
                 users.append(project.pm)
@@ -154,7 +149,6 @@ class Offer(models.Model):
         vacancy = self.room.vacancy
         worker = self.room.worker
 
-        # Loyiha yaratish yoki mavjudini topish
         project, created = Project.objects.get_or_create(
             vacancy=vacancy,
             company=vacancy.company,
@@ -165,14 +159,11 @@ class Offer(models.Model):
             }
         )
 
-        # Workerni loyihaga qo'shish
         project.workers.add(worker)
 
-        # Muzokaralar xonasini yopish
         self.room.status = 'accepted'
         self.room.save()
 
-        # Vakansiya to'ldimi tekshirish
         if vacancy.is_full():
             vacancy.status = 'IN_PROGRESS'
             vacancy.save()

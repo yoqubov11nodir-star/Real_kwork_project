@@ -115,7 +115,6 @@ class VacancyForm(forms.ModelForm):
         }
 
 class ProfileForm(forms.ModelForm):
-    # Bu yerda widget qo'shildi dizayn buzilmasligi uchun
     first_name = forms.CharField(max_length=50, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     last_name = forms.CharField(max_length=50, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
 
@@ -137,16 +136,13 @@ class ProfileForm(forms.ModelForm):
             self.fields['first_name'].initial = self.instance.user.first_name
             self.fields['last_name'].initial = self.instance.user.last_name
             
-            # AGAR FOYDALANUVCHI KOMPANIYA BO'LSA:
             if self.instance.role == 'client':
                 self.fields['first_name'].label = "Kompaniya nomi"
                 self.fields['last_name'].label = "Kompaniya turi (MChJ, XK va hk)"
                 self.fields['bio'].label = "Kompaniya haqida ma'lumot"
                 self.fields['portfolio_url'].label = "Kompaniya veb-sayti"
-                # Kompaniyaga kerak bo'lmagan maydonlarni yashiramiz
                 self.fields['hourly_rate'].widget = forms.HiddenInput()
                 self.fields['skills'].widget = forms.HiddenInput()
             else:
-                # Frilanser uchun odatiy holat
                 self.fields['first_name'].label = "Ism"
                 self.fields['last_name'].label = "Familiya"

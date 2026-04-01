@@ -112,7 +112,6 @@ class Vacancy(models.Model):
         Distinct() ishlatildi, chunki bitta worker xato tufayli ikki marta qo'shilgan bo'lsa ham bir marta sanaladi.
         """
         from django.db.models import Count
-        # Ushbu vakansiyaga tegishli proyektlardagi barcha workerlarni sanash
         result = self.projects.filter(
             status__in=['IN_PROGRESS', 'COMPLETED']
         ).aggregate(total_workers=models.Count('workers', distinct=True))

@@ -26,8 +26,6 @@ class NegotiationMessageAdmin(admin.ModelAdmin):
 
 @admin.register(Offer)
 class OfferAdmin(admin.ModelAdmin):
-    # Sizning modelingizda 'proposed_price' emas, 'proposed_budget' deb yozilgan
-    # 'is_accepted' o'rniga esa 'status' ishlatilgan
     list_display = ['room', 'sender', 'proposed_budget', 'proposed_days', 'status', 'created_at']
     list_filter = ['status']
     search_fields = ['room__vacancy__title', 'sender__username']

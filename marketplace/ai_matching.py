@@ -1,9 +1,5 @@
 import math
 
-# ─────────────────────────────────────────────────────────
-# MODEL BIR MARTA YUKLANADI, XOTIRADA SAQLANADI
-# Keyingi so'rovlar darhol ishlaydi
-# ─────────────────────────────────────────────────────────
 _model = None
 
 def get_model():
@@ -17,7 +13,7 @@ def get_model():
             )
             print("✅ AI model tayyor!")
         except ImportError:
-            _model = "keyword"  # fallback
+            _model = "keyword"  
     return _model
 
 

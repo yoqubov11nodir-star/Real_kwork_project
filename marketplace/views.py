@@ -30,7 +30,6 @@ def login_view(request):
         username_or_email = request.POST.get('username')
         password = request.POST.get('password')
         
-        # 1. Email yoki Username ekanini aniqlash
         if '@' in username_or_email:
             try:
                 user_obj = User.objects.get(email=username_or_email)
@@ -40,7 +39,6 @@ def login_view(request):
         else:
             username = username_or_email
 
-        # 2. Authenticate qilish
         if username:
             user = authenticate(request, username=username, password=password)
             if user is not None:
